@@ -5,6 +5,14 @@ const app = express();
 const port = process.env.PORT || 8002;
 const axios = require('axios');
 const bodyParser = require('body-parser');
+const fs = require('fs');
+
+const Web3 = require('web3');
+const solc = require('solc');
+const Tx = require('ethereumjs-tx').Transaction;
+const keythereum = require("keythereum");
+const log = require('ololog').configure({ time: true });
+const ansi = require('ansicolor').nice
 
 app.use(bodyParser.json());
 app.use(function(req, res, next) {
@@ -20,7 +28,8 @@ const tkn = "0x1276fa5F5DDCb9adEc850E559AfdB37E588DAb7b";
 const api = "http://172.13.0.2:5001/api/v1/";
 const meterData = "222";
 const rpcUrl = "https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586";
-/*addr: 0xC466cd9A677eB2fc800C1f44c5EE78b58Bb21525*/
+const contractaddr = "0x07799d623c82c4c4ada1245eb7688453216d529b";
+const addr = 0xC466cd9A677eB2fc800C1f44c5EE78b58Bb21525
 
 /*show the payment channel opened with the netting server
   show all Payments done*/
@@ -162,13 +171,6 @@ app.get('/close', async (req, res) => {
 
 });
 
-app.get('/test', async (req, res) => {
-
-    let adr = await axios.get(api + "address");
-    res.send(adr);
-
-});
-
 /*send smart meter data to netting server*/
 function doPayment(){
     let connect = api + 'payments/' + tkn + "/" + netserver;
@@ -184,6 +186,43 @@ function doPayment(){
 	    }
 	).catch(err => {console.log(err)});
 };
+
+/*get the match from the smart contract 
+  match is defined as {consumer, prosumer} where consumer is the actual household*/
+async function getMatch(){
+    let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+    let abi = JSON.parse(fs.readFileSync("abi.json"));
+    const contract = new web3.eth.Contract(abi, contractaddr);
+
+    let result = {consumer: undefined, prosumer: undefined};
+    for(let index = await contract.methods.matchCount().call() - 1; index >= 0; index--){
+	if(netserver == await contract.methods.energy_matches(index).call()){
+	    try{
+		let i = 0;
+		while(result.consumer == undefined){
+		    let test = await contract.methods.getMatch(index, i).call();
+		    if(test.consumer == addr){
+			result.consumer = test.consumer;
+		        result.prosumer = test.prosumer;
+			return result;
+		    }
+		    i++
+		}
+	    }catch(e){
+		return result;
+	    }
+	}
+    }
+
+    return result;
+
+}
+app.get("/test", async(req, res) => {
+
+    console.log(await getMatch());
+
+    res.send("das ist eine testseite");
+});
 
 /*running a function every minute
   checks if 15 minutes are over to send every 0, 15, 30, 45 minutes*/

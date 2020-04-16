@@ -32,7 +32,8 @@ const tkn = "0x1276fa5F5DDCb9adEc850E559AfdB37E588DAb7b";
 const api = "http://172.13.0.15:5001/api/v1/";
 const meterData = "150"
 const rpcUrl = "https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586";
-/*addr: 0x02516D1af993Fb82089473117D714B1A1f5d86dE*/
+const contractaddr = "0x07799d623c82c4c4ada1245eb7688453216d529b";
+const addr = 0x02516D1af993Fb82089473117D714B1A1f5d86dE
 
 
 /*show the payment channel opened with the netting server
@@ -204,21 +205,18 @@ function doPayment(){
 /*get the match from the smart contract 
   match is defined as {consumer, prosumer} where consumer is the actual household*/
 async function getMatch(){
-
-    let a = "0x75ed355435438cf1668e678a67f97d039a494916";
     let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
-    let abi = JSON.parse(fs.readFileSync("testabi.json"));
-    const contract = new web3.eth.Contract(abi, a);  
-    testsender = "0x9f8fd9FC068362F88893F1D08523BA6CE81B15f5";
+    let abi = JSON.parse(fs.readFileSync("abi.json"));
+    const contract = new web3.eth.Contract(abi, contractaddr);
 
     let result = {consumer: undefined, prosumer: undefined};
     for(let index = await contract.methods.matchCount().call() - 1; index >= 0; index--){
-	if(testsender == await contract.methods.energy_matches(index).call()){
+	if(netserver == await contract.methods.energy_matches(index).call()){
 	    try{
 		let i = 0;
 		while(result.consumer == undefined){
-		    let test = await contract.methods.getMatches(index, i).call();
-		    if(test.consumer == 2){
+		    let test = await contract.methods.getMatch(index, i).call();
+		    if(test.consumer == addr){
 			result.consumer = test.consumer;
 		        result.prosumer = test.prosumer;
 			return result;

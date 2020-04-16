@@ -30,7 +30,7 @@ const tkn = "0x1276fa5F5DDCb9adEc850E559AfdB37E588DAb7b";
 const api = "http://172.13.0.16:5001/api/v1/";
 const addr = "0x7303fd35225679E6B425FD14E0513c3E44ADa93F";
 const privKey = "aae362c8003d9e6908cc4a8ae5a56383841fa366f0605b94f37c7ea9bd0f793f";
-const contractaddr = "0x4bb6b1b21b819bba06a1a3f5ba48eb21338346ce";
+const contractaddr = "0x07799d623c82c4c4ada1245eb7688453216d529b";
 const rpcUrl = "https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586";
 /*addr: 0xD552f5fC6520C202E7263b8243A24e0cFB78749c*/
 
