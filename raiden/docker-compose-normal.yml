@@ -2,6 +2,27 @@ version: '3'
 
 services:
 
+  netting_server:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - './data:/data'
+    networks:
+      raiden_net:
+        ipv4_address: '172.13.0.16'
+    command:
+      --keystore-path ./data/keystore
+      --network-id goerli
+      --eth-rpc-endpoint https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586
+      --gas-price fast
+      --environment-type development
+      --api-address 0.0.0.0:5001
+      --accept-disclaimer
+      --web-ui
+      --address "0x7303fd35225679E6B425FD14E0513c3E44ADa93F"
+      --password-file ./data/password.txt
+
   raiden_1:
     build:
       context: .
