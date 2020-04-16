@@ -6,7 +6,6 @@ contract ernergy_matches_contract{
     struct Match{
         string prosumer;
         string consumer;
-        
     }
     
     struct Matchlist{
@@ -14,15 +13,21 @@ contract ernergy_matches_contract{
         Match[] matches;
     }
     
+    //all matches sent to the smart contract
     Matchlist[] public energy_matches;
+    
+    //counts how many times matches were deployed
     uint public matchCount;
     
-    function getMatches(uint index, uint i) public view returns(Match memory){
+    //get a match from energy_matches
+    function getMatch(uint index, uint i) public view returns(Match memory){
         return energy_matches[index].matches[i];
     } 
     
+    //add a Matchlist object to energy_matches with the address of the sender and all matches
     function deployMatches(string[] memory matches) public {
         energy_matches.length++;
+        energy_matches[energy_matches.length - 1].sender = msg.sender;
         matchCount = energy_matches.length;
         
         for(uint i = 0; i < matches.length; i++){
@@ -30,6 +35,7 @@ contract ernergy_matches_contract{
         }
     }
     
+    //add a match to energy matches 
     function addMatch(string memory obj) private returns(Match memory) {
         bool change = false;
         byte value = byte(":");
@@ -41,7 +47,8 @@ contract ernergy_matches_contract{
         bytes memory consumer = new bytes((ref.length - 1)/2);
         bytes memory prosumer = new bytes((ref.length - 1)/2);
         
-        //find ':' and write prosumer then consumer
+        //iterate over ref and write prosumer then consumer
+        //change to consumer when ":" ist found
         for(uint i = 0; i < ref.length; i++){
             if(!change && (byte(ref[i]) != value)){
                 prosumer[i] = ref[i];
@@ -53,7 +60,7 @@ contract ernergy_matches_contract{
                 change = true;
             } 
         }
-        energy_matches[energy_matches.length - 1].sender = msg.sender;
+        //cast prosumer and consumer to a string and push the Match object to the Match[] in the Matchlist object
         energy_matches[energy_matches.length - 1].matches.push(Match(string(prosumer), string(consumer)));
     }
 }
