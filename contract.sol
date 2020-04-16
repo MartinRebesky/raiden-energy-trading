@@ -4,26 +4,30 @@ pragma experimental ABIEncoderV2;
 contract ernergy_matches_contract{
     
     struct Match{
-        address matcher;
         string prosumer;
         string consumer;
         
     }
     
-    Match[] public energy_matches;
-    uint public matchCount;
-    uint public lastDeploy;
+    struct Matchlist{
+        address sender;
+        Match[] matches;
+    }
     
-    uint private count;
+    Matchlist[] public energy_matches;
+    uint public matchCount;
+    
+    function getMatches(uint index, uint i) public view returns(Match memory){
+        return energy_matches[index].matches[i];
+    } 
     
     function deployMatches(string[] memory matches) public {
-        lastDeploy += count;
-        count = matches.length;
+        energy_matches.length++;
+        matchCount = energy_matches.length;
         
         for(uint i = 0; i < matches.length; i++){
             addMatch(matches[i]);
         }
-        matchCount = energy_matches.length - 1;
     }
     
     function addMatch(string memory obj) private returns(Match memory) {
@@ -49,20 +53,7 @@ contract ernergy_matches_contract{
                 change = true;
             } 
         }
-        energy_matches.push(Match(msg.sender, string(prosumer), string(consumer)));
+        energy_matches[energy_matches.length - 1].sender = msg.sender;
+        energy_matches[energy_matches.length - 1].matches.push(Match(string(prosumer), string(consumer)));
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 }

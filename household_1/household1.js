@@ -27,12 +27,12 @@ app.use(function(req, res, next) {
 }); 
 
 /*start*/
-const netserver = "0xD552f5fC6520C202E7263b8243A24e0cFB78749c";
-const tkn = "0xD8EA06B2bC22Ded08e8642564deA164Ce61FF220";
+const netserver = "0x7303fd35225679E6B425FD14E0513c3E44ADa93F";
+const tkn = "0x1276fa5F5DDCb9adEc850E559AfdB37E588DAb7b";
 const api = "http://172.13.0.15:5001/api/v1/";
 const meterData = "150"
 const rpcUrl = "https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586";
-/*adr: 0x559B958D60DE2Bc30eB0B22097D1AC34317B535D*/
+/*addr: 0x02516D1af993Fb82089473117D714B1A1f5d86dE*/
 
 
 /*show the payment channel opened with the netting server

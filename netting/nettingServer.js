@@ -10,7 +10,7 @@ const fs = require('fs');
 const Web3 = require('web3');
 const solc = require('solc');
 const Tx = require('ethereumjs-tx').Transaction;
-const keythereum = require("keythereum");
+//const keythereum = require("keythereum");
 const log = require('ololog').configure({ time: true });
 const ansi = require('ansicolor').nice
 
@@ -26,10 +26,10 @@ app.use(function(req, res, next) {
 });
 
 /*start*/
-const tkn = "0xD8EA06B2bC22Ded08e8642564deA164Ce61FF220";
+const tkn = "0x1276fa5F5DDCb9adEc850E559AfdB37E588DAb7b";
 const api = "http://172.13.0.16:5001/api/v1/";
-const addr = "0xD552f5fC6520C202E7263b8243A24e0cFB78749c";
-const privKey = "82c6d549a80489c2445202b41e5e8c93d6b08d99f41bdfb56ea6374c8ba307eb";
+const addr = "0x7303fd35225679E6B425FD14E0513c3E44ADa93F";
+const privKey = "aae362c8003d9e6908cc4a8ae5a56383841fa366f0605b94f37c7ea9bd0f793f";
 const contractaddr = "0x4bb6b1b21b819bba06a1a3f5ba48eb21338346ce";
 const rpcUrl = "https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586";
 /*addr: 0xD552f5fC6520C202E7263b8243A24e0cFB78749c*/
@@ -39,8 +39,15 @@ var prosumerTest = [{"id": "10","balance": 128},{"id": "11", "balance": 34}];
 
 app.get('/test', async(req, res) => {
 
+
 res.send("nur ein test");
 });
+
+function getPrivkey(){
+    var keyObject = keythereum.importFromFile(addr, "./");
+    var privateKey = keythereum.recover("1234", keyObject);
+    console.log(privateKey.toString('hex'));
+};
 
 /*show addr, channel, payments and pending tranfers*/
 app.get('/', async (req, res) => {

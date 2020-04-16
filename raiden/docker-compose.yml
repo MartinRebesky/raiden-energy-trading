@@ -20,7 +20,7 @@ services:
       --api-address 0.0.0.0:5001
       --accept-disclaimer
       --web-ui
-      --address "0xD552f5fC6520C202E7263b8243A24e0cFB78749c"
+      --address "0x7303fd35225679E6B425FD14E0513c3E44ADa93F"
       --password-file ./data/password.txt
 
   raiden_1:
@@ -41,7 +41,7 @@ services:
       --api-address 0.0.0.0:5001
       --accept-disclaimer
       --web-ui
-      --address "0x559B958D60DE2Bc30eB0B22097D1AC34317B535D"
+      --address "0x02516D1af993Fb82089473117D714B1A1f5d86dE"
       --password-file ./data/password.txt
 
   raiden_2:
@@ -62,7 +62,7 @@ services:
       --api-address 0.0.0.0:5001
       --accept-disclaimer
       --web-ui
-      --address "0x37012840cf69Ee0297bE9bF8E11413df7c951FC0"
+      --address "0xC466cd9A677eB2fc800C1f44c5EE78b58Bb21525"
       --password-file ./data/password.txt
 
   raiden_3:
@@ -83,7 +83,7 @@ services:
       --api-address 0.0.0.0:5001
       --accept-disclaimer
       --web-ui
-      --address "0x2F3a0db383A23dBD10f18c8D72cCeEedCcDcAdc5"
+      --address "0xC2Cc3E9B2aE39f17F17544d27336C9F301ee39C4"
       --password-file ./data/password.txt
   
 networks:
