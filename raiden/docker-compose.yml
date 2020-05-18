@@ -19,7 +19,6 @@ services:
       --environment-type development
       --api-address 0.0.0.0:5001
       --accept-disclaimer
-      --web-ui
       --address "0x7303fd35225679E6B425FD14E0513c3E44ADa93F"
       --password-file ./data/password.txt
 
@@ -40,7 +39,6 @@ services:
       --environment-type development
       --api-address 0.0.0.0:5001
       --accept-disclaimer
-      --web-ui
       --address "0x02516D1af993Fb82089473117D714B1A1f5d86dE"
       --password-file ./data/password.txt
 
@@ -61,7 +59,6 @@ services:
       --environment-type development
       --api-address 0.0.0.0:5001
       --accept-disclaimer
-      --web-ui
       --address "0xC466cd9A677eB2fc800C1f44c5EE78b58Bb21525"
       --password-file ./data/password.txt
 
@@ -82,7 +79,6 @@ services:
       --environment-type development
       --api-address 0.0.0.0:5001
       --accept-disclaimer
-      --web-ui
       --address "0xC2Cc3E9B2aE39f17F17544d27336C9F301ee39C4"
       --password-file ./data/password.txt
   

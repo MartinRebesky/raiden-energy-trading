@@ -39,6 +39,36 @@ var prosumerTest = [{"id": "10","balance": 128},{"id": "11", "balance": 34}];
 
 app.get('/test', async(req, res) => {
 
+    let testmatches = ["1234:5678","5678:1234","191817:121314"];
+
+    let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+
+    let abi = JSON.parse(fs.readFileSync("abi.json"));
+    let CoursesContract = new web3.eth.Contract(abi, contractaddr);
+    let gasPrice = await web3.eth.getGasPrice();
+    let nonce = await web3.eth.getTransactionCount(addr);
+    
+    let rawTx = {
+	from: addr,
+	to: contractaddr,
+	data: CoursesContract.methods.deployMatches(testmatches).encodeABI(),
+	gasPrice: web3.utils.toHex(gasPrice),
+	gas: web3.utils.toHex(1000000),
+	nonce: web3.utils.toHex(nonce),
+	value: 0x00,
+	chainId: 0x05
+    };
+
+    //create new transaction and sign
+    let tx = new Tx(rawTx, {chain: "goerli"});
+    let bufferedKey = Buffer.from(privKey, "hex");
+
+    tx.sign(bufferedKey);
+    let serializedTx = tx.serialize();
+    
+    //send transaction
+    await web3.eth.sendSignedTransaction("0x" + serializedTx.toString("hex"));
+
 
 res.send("nur ein test");
 });
@@ -184,7 +214,7 @@ async function matchHouseholds(){
   return households[] with [0] = prosumer[](id,balance) and [1] = consumer[](id,balance)*/
 async function getHouseholds(){
     
-    let payments = await axios.get(api + "payments");
+    let payments = await axios.get(api + "payments/" + tkn);
     let prosumer = [];
     let consumer = [];
     let households = [];

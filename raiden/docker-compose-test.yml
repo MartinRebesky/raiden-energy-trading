@@ -1,5 +1,13 @@
 version: '3'
 
+networks:
+  raiden_net-1:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.13.0.0/16
+
 services:
 
   raiden_1:
