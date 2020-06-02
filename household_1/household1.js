@@ -24,11 +24,11 @@ app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
-}); 
+});
 
 /*start*/
 const netserver = "0x7303fd35225679E6B425FD14E0513c3E44ADa93F";
-const tkn = "0x1276fa5F5DDCb9adEc850E559AfdB37E588DAb7b";
+const tkn = "0x4A077a9dd42726E722eF167c9363EEC318e40182";
 const api = "http://172.13.0.15:5001/api/v1/";
 const meterData = "150"
 const rpcUrl = "https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586";
@@ -39,7 +39,7 @@ const addr = 0x02516D1af993Fb82089473117D714B1A1f5d86dE
 /*show the payment channel opened with the netting server
   show all Payments done*/
 app.get('/', async (req, res) => {
-    
+
     let adr = await axios.get(api + "address");
     let pending = await axios.get(api + "pending_transfers");
     let channel = await axios.get(api + "channels/" + tkn + "/" + netserver);
@@ -66,12 +66,12 @@ app.get('/open_channel', async(req, res) => {
 	"total_deposit": "10000000000000000000",
 	"settle_timeout": "500"
     };
-    
+
 
     axios.put(connect, data).then(
 	    response => {
 		console.log(response.data)
-	    }	
+	    }
 	).catch(err => {console.log(err)})
 
     res.send("open channel");
@@ -91,7 +91,7 @@ app.get('/deposit', async(req, res) => {
     let data = {
 	"total_deposit": 10000000000000000000
     };
-    
+
 
     axios.patch(connect, data).then(
 	    response => {
@@ -109,7 +109,7 @@ app.get('/join_network', async(req, res) => {
 
     let connect = api + "connections/" + tkn;
     let data = {
-	"funds":50000000000000000000, 
+	"funds":50000000000000000000,
 	"initial_channel_target": 0
     };
 
@@ -136,14 +136,14 @@ app.get('/mint', async(req, res) => {
     const headers = {
 	'Content-Type': 'application/json'
     }
-	
+
     axios.post(connect, data).then(
 	    response => {
 		console.log(response.data)
 	    }
 	).catch(err => {console.log(err)});
 
-	return res.send("minting");	
+	return res.send("minting");
 });
 
 
@@ -154,7 +154,7 @@ app.get('/close', async (req, res) => {
     let data = {
 	"state": "closed"
     };
-    
+
 
     axios.patch(connect, data).then(
 	    response => {
@@ -188,7 +188,7 @@ function doPayment(){
 		"amount": "1",
 		"identifier": identifier + result[0].value
     	      };
-    
+
 	      console.log(data)
     	      axios.post(connect, data).then(
 	    	response => {
@@ -197,12 +197,12 @@ function doPayment(){
 	      ).catch(err => {console.log(err)});
 	      db.close();
 	});
-    }); 
-   
-    
+    });
+
+
 };
 
-/*get the match from the smart contract 
+/*get the match from the smart contract
   match is defined as {consumer, prosumer} where consumer is the actual household*/
 async function getMatch(){
     let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));

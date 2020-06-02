@@ -10,7 +10,7 @@ const fs = require('fs');
 const Web3 = require('web3');
 const solc = require('solc');
 const Tx = require('ethereumjs-tx').Transaction;
-//const keythereum = require("keythereum");
+const keythereum = require("keythereum");
 const log = require('ololog').configure({ time: true });
 const ansi = require('ansicolor').nice
 
@@ -26,20 +26,15 @@ app.use(function(req, res, next) {
 });
 
 /*start*/
-const tkn = "0x1276fa5F5DDCb9adEc850E559AfdB37E588DAb7b";
+const addr = "0x18e663C2238cdB011e75d4c1E19910499259667A";
 const api = "http://172.13.0.16:5001/api/v1/";
-const addr = "0x7303fd35225679E6B425FD14E0513c3E44ADa93F";
-const privKey = "aae362c8003d9e6908cc4a8ae5a56383841fa366f0605b94f37c7ea9bd0f793f";
-const contractaddr = "0x07799d623c82c4c4ada1245eb7688453216d529b";
-const rpcUrl = "https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586";
-/*addr: 0xD552f5fC6520C202E7263b8243A24e0cFB78749c*/
-
-var consumerTest = [{"id":"0","balance": 3},{"id": "1","balance": 10},{"id": "2", "balance": 6},{"id": "3","balance": 4},{"id": "4", "balance": 7},{"id": "5", "balance": 11}];
-var prosumerTest = [{"id": "10","balance": 128},{"id": "11", "balance": 34}];
+const tkn = "0x4A077a9dd42726E722eF167c9363EEC318e40182";
+const contractaddr = "0x0173E701D6920236BB514Afa6E84E5b08eF3387b";
+const rpcUrl = "https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698";
 
 app.get('/test', async(req, res) => {
 
-    let testmatches = ["1234:5678","5678:1234","191817:121314"];
+    let testmatches = ["0x18e663C2238cdB011e75d4c1E19910499259667A:0x18e663C2238cdB011e75d4c1E19910499259667A","0x18e663C2238cdB011e75d4c1E19910499259667A:0x18e663C2238cdB011e75d4c1E19910499259667A","0x18e663C2238cdB011e75d4c1E19910499259667A:0x18e663C2238cdB011e75d4c1E19910499259667A","0x18e663C2238cdB011e75d4c1E19910499259667A:0x18e663C2238cdB011e75d4c1E19910499259667A"];
 
     let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
 
@@ -47,16 +42,19 @@ app.get('/test', async(req, res) => {
     let CoursesContract = new web3.eth.Contract(abi, contractaddr);
     let gasPrice = await web3.eth.getGasPrice();
     let nonce = await web3.eth.getTransactionCount(addr);
-    
+    let privKey = await getPrivatekey()
+
+    console.log(contractaddr)
+
     let rawTx = {
-	from: addr,
-	to: contractaddr,
-	data: CoursesContract.methods.deployMatches(testmatches).encodeABI(),
-	gasPrice: web3.utils.toHex(gasPrice),
-	gas: web3.utils.toHex(1000000),
-	nonce: web3.utils.toHex(nonce),
-	value: 0x00,
-	chainId: 0x05
+	     from: addr,
+	     to: contractaddr,
+	     data: CoursesContract.methods.deployMatches(testmatches).encodeABI(),
+       gasPrice: web3.utils.toHex(gasPrice),
+	     gas: web3.utils.toHex(1000000),
+	     nonce: web3.utils.toHex(nonce),
+	     value: 0x00,
+	     chainId: 0x05
     };
 
     //create new transaction and sign
@@ -65,7 +63,7 @@ app.get('/test', async(req, res) => {
 
     tx.sign(bufferedKey);
     let serializedTx = tx.serialize();
-    
+
     //send transaction
     await web3.eth.sendSignedTransaction("0x" + serializedTx.toString("hex"));
 
@@ -73,15 +71,51 @@ app.get('/test', async(req, res) => {
 res.send("nur ein test");
 });
 
-function getPrivkey(){
-    var keyObject = keythereum.importFromFile(addr, "./");
+async function test(){
+  let testmatches = [["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"],["0x18e663C2238cdB011e75d4c1E19910499259667A", "0x18e663C2238cdB011e75d4c1E19910499259667A"]]
+  let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+
+  let abi = JSON.parse(fs.readFileSync("energy_contract_abi.json"));
+  let CoursesContract = new web3.eth.Contract(abi, contractaddr);
+  let gasPrice = await web3.eth.getGasPrice();
+  let nonce = await web3.eth.getTransactionCount(addr);
+  let privKey = await getPrivatekey()
+
+  console.log(contractaddr)
+
+  let rawTx = {
+     from: addr,
+     to: contractaddr,
+     data: CoursesContract.methods.deployMatches(testmatches).encodeABI(),
+     gasPrice: web3.utils.toHex(1),
+     gas: web3.utils.toHex(8000000),
+     nonce: web3.utils.toHex(nonce),
+     value: 0x00,
+     chainId: 0x05
+  };
+
+  //create new transaction and sign
+  let tx = new Tx(rawTx, {chain: "goerli"});
+  let bufferedKey = Buffer.from(privKey, "hex");
+
+  tx.sign(bufferedKey);
+  let serializedTx = tx.serialize();
+
+  //send transaction
+  await web3.eth.sendSignedTransaction("0x" + serializedTx.toString("hex"));
+  console.log("finished")
+}
+
+function getPrivatekey(){
+    var keyObject = keythereum.importFromFile(addr, "./data");
     var privateKey = keythereum.recover("1234", keyObject);
     console.log(privateKey.toString('hex'));
+    return privateKey.toString('hex');
 };
 
 /*show addr, channel, payments and pending tranfers*/
 app.get('/', async (req, res) => {
-    
+
     let adr = await axios.get(api + "address");
     let channel = await axios.get(api + "channels/" + tkn);
     let payments = await axios.get(api + "payments/" + tkn);
@@ -102,7 +136,7 @@ app.get('/join_network', async(req, res) => {
 
     let connect = api + "connections/" + tkn;
     let data = {
-	"funds":50000000000000000000, 
+	"funds":50000000000000000000,
 	"initial_channel_target": 0
     };
 
@@ -129,19 +163,19 @@ app.get('/mint', async(req, res) => {
     const headers = {
 	'Content-Type': 'application/json'
     }
-	
+
     axios.post(connect, data).then(
 	    response => {
 		console.log(response.data)
 	    }
 	).catch(err => {console.log(err)});
 
-	return res.send("minting");	
+	return res.send("minting");
 });
 
 //write matches in smart contract and deploy on blockchain
 async function deployMatches(){
-    
+
     let matches = await matchHouseholds();
 
     let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
@@ -150,7 +184,7 @@ async function deployMatches(){
     let CoursesContract = new web3.eth.Contract(abi, contractaddr);
     let gasPrice = await web3.eth.getGasPrice();
     let nonce = await web3.eth.getTransactionCount(addr);
-    
+
     let rawTx = {
 	from: addr,
 	to: contractaddr,
@@ -168,7 +202,7 @@ async function deployMatches(){
 
     tx.sign(bufferedKey);
     let serializedTx = tx.serialize();
-    
+
     //send transaction
     await web3.eth.sendSignedTransaction("0x" + serializedTx.toString("hex"));
 
@@ -182,7 +216,7 @@ async function matchHouseholds(){
     console.log(households);
     let consumer = households[1];
     let prosumer = households[0];
-    
+
     let res = [];
     let contains = [];
 
@@ -198,12 +232,12 @@ async function matchHouseholds(){
 		break;
 	    }
 	}
-	
+
 	if(contains.length == prosumer.length){
 	    contains = [];
 	}
     }
-    
+
     console.log(res);
     return res;
 };
@@ -213,7 +247,7 @@ async function matchHouseholds(){
   every household is only contained once
   return households[] with [0] = prosumer[](id,balance) and [1] = consumer[](id,balance)*/
 async function getHouseholds(){
-    
+
     let payments = await axios.get(api + "payments/" + tkn);
     let prosumer = [];
     let consumer = [];
@@ -227,7 +261,7 @@ async function getHouseholds(){
 	    break;
 	}else{
 	    let id = payments.data[i].initiator;
-	    let balance = payments.data[i].identifier;	
+	    let balance = payments.data[i].identifier;
 	    if(!contains.includes(id)){
 		contains.push(id);
 		households.push({id, balance});
@@ -241,7 +275,7 @@ async function getHouseholds(){
 	    }
 	}
     }
-    
+
     let res = [prosumer, consumer];
     console.log(res);
     return res;
@@ -264,4 +298,5 @@ cron.schedule('* * * * *', () => {
 
 app.listen(port, () => {
     console.log(`Netting Server listening on ${port}`);
+    test();
 });

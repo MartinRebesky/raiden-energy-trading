@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+
+  netting_server:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - './data:/data'
+    networks:
+      raiden_net:
+        ipv4_address: '172.144.0.16'
+    command:
+      --keystore-path ./data/keystore
+      --network-id goerli
+      --eth-rpc-endpoint https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698
+      --gas-price fast
+      --environment-type development
+      --api-address 0.0.0.0:5001
+      --accept-disclaimer
+      --address "0x18e663C2238cdB011e75d4c1E19910499259667A"
+      --password-file ./data/password.txt
+      --web-ui
+
+  
+  
+networks:
+  netting:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.144.0.0/16
