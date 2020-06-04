@@ -14,7 +14,7 @@ services:
     command:
       --keystore-path ./data/keystore
       --network-id goerli
-      --eth-rpc-endpoint https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586
+      --eth-rpc-endpoint https://goerli.infura.io/v3/be31ee424bc148848884051db38edf4a
       --gas-price fast
       --environment-type development
       --api-address 0.0.0.0:5001
@@ -34,7 +34,7 @@ services:
     command:
       --keystore-path ./data/keystore
       --network-id goerli
-      --eth-rpc-endpoint https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586
+      --eth-rpc-endpoint https://goerli.infura.io/v3/be31ee424bc148848884051db38edf4a
       --gas-price fast
       --environment-type development
       --api-address 0.0.0.0:5001
@@ -54,7 +54,7 @@ services:
     command:
       --keystore-path ./data/keystore
       --network-id goerli
-      --eth-rpc-endpoint https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586
+      --eth-rpc-endpoint https://goerli.infura.io/v3/be31ee424bc148848884051db38edf4a
       --gas-price fast
       --environment-type development
       --api-address 0.0.0.0:5001
@@ -74,14 +74,14 @@ services:
     command:
       --keystore-path ./data/keystore
       --network-id goerli
-      --eth-rpc-endpoint https://goerli.infura.io/v3/9081143fcc3e4533ae4cc3e26ff0a586
+      --eth-rpc-endpoint https://goerli.infura.io/v3/be31ee424bc148848884051db38edf4a
       --gas-price fast
       --environment-type development
       --api-address 0.0.0.0:5001
       --accept-disclaimer
       --address "0xC2Cc3E9B2aE39f17F17544d27336C9F301ee39C4"
       --password-file ./data/password.txt
-  
+
 networks:
   raiden_net:
     driver: bridge

@@ -9,7 +9,7 @@ services:
     volumes:
       - './data:/data'
     networks:
-      raiden_net:
+      netting:
         ipv4_address: '172.144.0.16'
     command:
       --keystore-path ./data/keystore
@@ -23,8 +23,8 @@ services:
       --password-file ./data/password.txt
       --web-ui
 
-  
-  
+
+
 networks:
   netting:
     driver: bridge
