@@ -41,7 +41,7 @@ const addr = getManagerAddress();
 const privKey = getPrivKey("1234");
 const tkn = "0x4A077a9dd42726E722eF167c9363EEC318e40182";
 const contractaddr = "0xcc77c453471c00af35d08f0103991cc604adf5a2";
-const rpcUrl = "https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698";
+const rpcUrl = "https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01";
 const nettingAddr = "https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698";
 
 /*
@@ -127,25 +127,49 @@ start server
 */
 app.listen(serverport, () => {
     console.log(addr + ` listening on port ${serverport}`);
-    getAllAccounts();
+    sendEther();
 });
 
 /*
-return json object with every account with his api and networkid
+returns array with all accounts with address, api and networkid
 */
 function getAllAccounts(){
-  // Get document, or throw exception on error
-  try {
-    const doc = yaml.safeLoad(fs.readFileSync('./network0/docker-compose.yml', 'utf8'));
-    console.log(doc.services.raiden_0xdcc84f895097608a2470f0d9e8868ee53badb0f9.networks.raiden_net_0.ipv4_address);
-  } catch (e) {
-    console.log(e);
-  }
-  fs.readdirSync("./unused");
-  let count = countNetwork();
-  for(let i = 0; i < count; i++){
+  var res = [];
+  networkcount = countNetwork();
 
+  let addresses = [];
+  //iterate over all networkids
+  for(let i = 0; i < networkcount; i++){
+    let keyfiles = fs.readdirSync("./network" + i + "/data/keystore")
+    let addresses = [];
+    //get all addresses from keyfiles
+    for(keyfile of keyfiles){
+      let json = JSON.parse(fs.readFileSync("network" + i + "/data/keystore/" + keyfile));
+      addresses.push(checksummed(json.address));
+    }
+
+    //get api for all addresses of the network with networkid = i
+    let doc = yaml.safeLoad(fs.readFileSync("./network" + i + "/docker-compose.yml", "utf8"));
+    for(address of addresses){
+      let ymlvalue = doc.services["raiden_" + address.toLowerCase()];
+      //get ip
+      let ip = ymlvalue.networks["raiden_net_" + i].ipv4_address;
+
+      //get port
+      let index = ymlvalue.command.indexOf("0.0.0.0:") + 8;
+      let port = "";
+      for(let i = index; i < ymlvalue.command.length; i++){
+        if(ymlvalue.command[i] == " " | ymlvalue.command[i] == "\n" | ymlvalue.command[i] == "\t"){
+          break
+        }else{
+          port += ymlvalue.command[i];
+        }
+      }
+      let api = "http://" + ip + ":" + port + "/api/v1/";
+      res.push({"address": address, "api": api, "networkid": i});
+    }
   }
+  return res;
 }
 
 
@@ -154,6 +178,7 @@ function getAllAccounts(){
   remove an account
   accounts are moved to unused and removed from used
 */
+/*
 function remove(n){
   if(n > accounts.used.length){
     console.log("not so many accounts available");
@@ -174,6 +199,7 @@ function remove(n){
   writeDockerCompose();
   console.log("removed accounts");
 }
+*/
 
 /*write the docker-compose.yml for every used account
   create 1 network for 5 accounts
@@ -234,22 +260,22 @@ async function sendEther(){
   let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
   var amount = await web3.utils.numberToHex(web3.utils.toWei('0.01', 'ether'));
   balance_manager = await web3.utils.fromWei( await web3.eth.getBalance(addr));
-  console.log(balance_manager);
-
-
-    balance_account = await web3.utils.fromWei(await web3.eth.getBalance("0x83dcaf6e583c3cd4a261e69fc07797de8f107380"));
-
-    console.log(balance_account);
-
+  console.log("balance manager: " + balance_manager);
+  var accounts = getAllAccounts();
+  for(account of accounts){
+    console.log(account.address + ": " + await web3.utils.fromWei(await web3.eth.getBalance(account.address)))
+    if(await web3.utils.fromWei(await web3.eth.getBalance(account.address)) >= 0.01){
+      continue;
+    }
     try{
       let gasPrice = await web3.eth.getGasPrice();
       let nonce = await web3.eth.getTransactionCount(addr);
 
       let data = {
         from: addr,
-        to: "0x83dcaf6e583c3cd4a261e69fc07797de8f107380",
+        to: account.address,
         gasPrice: await web3.utils.toHex(gasPrice),
-        gas: web3.utils.toHex(1000000),
+        gas: web3.utils.toHex(8000000),
         nonce: web3.utils.toHex(nonce),
         value: amount,
         chainId: '0x05'
@@ -263,11 +289,11 @@ async function sendEther(){
       //send transaction
       let serializedTx = transaction.serialize();
       await web3.eth.sendSignedTransaction("0x" + serializedTx.toString("hex"));
-  } catch(err){
+      console.log("send 0.01 goerli ether to " + account.address);
+    } catch(err){
     sendEther();
+    }
   }
-
-
 }
 
 //tokennetwork request start

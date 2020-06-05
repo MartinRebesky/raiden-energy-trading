@@ -32,7 +32,7 @@ const privKey = getPrivKey("1234") //password from first keyfile of keystores
 const api = getApi();
 const tkn = "0x4A077a9dd42726E722eF167c9363EEC318e40182";
 const contractaddr = "0xcc77c453471c00af35d08f0103991cc604adf5a2";
-const rpcUrl = "https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698";
+const rpcUrl = "https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01";
 
 /*
 returns a checksummed address from any ethereum address
