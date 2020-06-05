@@ -14,7 +14,7 @@ services:
     command:
       --keystore-path ./data/keystore
       --network-id goerli
-      --eth-rpc-endpoint https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698
+      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
       --gas-price fast
       --environment-type development
       --api-address 0.0.0.0:5001

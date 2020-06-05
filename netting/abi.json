@@ -1,22 +1,33 @@
 [
 	{
-		"constant": false,
 		"inputs": [
 			{
-				"name": "matches",
-				"type": "string[]"
+				"components": [
+					{
+						"internalType": "string",
+						"name": "prosumer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "consumer",
+						"type": "string"
+					}
+				],
+				"internalType": "struct ernergy_matches_contract.Match[]",
+				"name": "m",
+				"type": "tuple[]"
 			}
 		],
 		"name": "deployMatches",
 		"outputs": [],
-		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
-		"constant": true,
 		"inputs": [
 			{
+				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
 			}
@@ -24,22 +35,23 @@
 		"name": "energy_matches",
 		"outputs": [
 			{
+				"internalType": "address",
 				"name": "sender",
 				"type": "address"
 			}
 		],
-		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
-		"constant": true,
 		"inputs": [
 			{
+				"internalType": "uint256",
 				"name": "index",
 				"type": "uint256"
 			},
 			{
+				"internalType": "uint256",
 				"name": "i",
 				"type": "uint256"
 			}
@@ -49,33 +61,34 @@
 			{
 				"components": [
 					{
+						"internalType": "string",
 						"name": "prosumer",
 						"type": "string"
 					},
 					{
+						"internalType": "string",
 						"name": "consumer",
 						"type": "string"
 					}
 				],
+				"internalType": "struct ernergy_matches_contract.Match",
 				"name": "",
 				"type": "tuple"
 			}
 		],
-		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
-		"constant": true,
 		"inputs": [],
 		"name": "matchCount",
 		"outputs": [
 			{
+				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
 			}
 		],
-		"payable": false,
 		"stateMutability": "view",
 		"type": "function"
 	}

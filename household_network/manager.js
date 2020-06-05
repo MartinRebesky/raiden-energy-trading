@@ -1,7 +1,8 @@
 const express = require('express');
-const port = process.env.PORT || 8000;
+const serverport = process.env.PORT || 9000;
 const app = express();
 const fs = require('fs');
+const yaml = require('js-yaml');
 const Web3 = require('web3');
 const Transaction = require('ethereumjs-tx').Transaction;
 const child_process = require('child_process')
@@ -36,52 +37,118 @@ app.use(function(req, res, next) {
 });
 
 /*start*/
-const addr = "0x513C83E1E888bD0a7bCCA3F9950fd7E75f076D09";
-const privKey = "78fcdfe9214abf934afefaa3bcc31c6178bf549966b266a01f03869b0b9ea52d";
+const addr = getManagerAddress();
+const privKey = getPrivKey("1234");
 const tkn = "0x4A077a9dd42726E722eF167c9363EEC318e40182";
-const contractaddr = "0x07799d623c82c4c4ada1245eb7688453216d529b";
+const contractaddr = "0xcc77c453471c00af35d08f0103991cc604adf5a2";
 const rpcUrl = "https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698";
-const nettingAddr = "0x18e663C2238cdB011e75d4c1E19910499259667A";
+const nettingAddr = "https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698";
 
-/*add new accounts to accounts.json
-  n = number of accounts to be added
+/*
+returns a checksummed address from any ethereum address
+very importent to read keyfile.json and get address
+*/
+function getManagerAddress() {
+    //get keyfiles
+    let keystores = fs.readdirSync("./data/keystore");
 
-  move accounts from unused to used
-  run a chell command to create n new geth accounts
-  write address and keyfile to addresses.json*/
-function add(n){
+    //get the address from the first keyfile of keystore
+    let json = JSON.parse(fs.readFileSync("./data/keystore/" + keystores[0]));
+    let address = json.address.toLowerCase().replace('0x','');
 
-    while(accounts.unused.length != 0 && n > 0){
-      account = accounts.unused.pop();
-      account.api = "";
-      accounts.used.push(account);
-      fs.renameSync("./network/data/keystore/unused/" + account.keyfile, "./network/data/keystore/used/" + account.keyfile);
-      n--;
-    }
+    //hashing address
+    let web3 = new Web3();
+    var hash = web3.utils.sha3(address).replace('0x', '');
 
-  for(n; n > 0; n--){
-    let cmd = String(child_process.execSync("geth account new --datadir ./network/data --password ./network/data/password.txt"));
-    let output = cmd.split("\n")
-    for(str of output){
-      if(str.includes("Public address of the key:")){
-        var addr = str.split(":")[1].replace(/\s/g, "");
-      }else if(str.includes("Path of the secret key file:")){
-        var keyfile = str.split(":")[1].split("/")[3];
+    var res = '0x';
+    for(i in address){
+      if(parseInt(hash[i]) < 8){
+        res += address[i]
+      }else{
+        res += address[i].toUpperCase();
       }
     }
+    return res
+};
 
-    accounts.used.push({
-      "addr": addr,
-      "keyfile": keyfile,
-      "api": ""
-    });
-
-    fs.renameSync("./network/data/keystore/" + keyfile, "./network/data/keystore/used/" + keyfile);
+/*
+returns the private key from the first keyfile of keystore
+*/
+function getPrivKey(password){
+  //get private key with password
+  try {
+    var keyObject = keythereum.importFromFile(addr.toLowerCase(), "./data");
+    var privateKey = keythereum.recover(password, keyObject);
+  } catch (e) {
+    console.log(e)
   }
-  fs.writeFileSync("./network/accounts.json", JSON.stringify(accounts));
-  writeDockerCompose();
-  console.log("added new accounts");
+
+  return privateKey.toString("hex");
+
+
 }
+
+/*
+get api from docker-compose file
+*/
+function getApi(){
+  //get string from docker-compose.yml
+  let yml = fs.readFileSync("./docker-compose.yml", "UTF8");
+  res = ""
+
+  //get ip address
+  let index = yml.indexOf("ipv4_address: '") + 15;
+  ip = "";
+  for(let i = index; i < yml.length; i++){
+    if(yml[i] == "'"){
+      break
+    }else{
+      ip += yml[i];
+    }
+  }
+
+  //get port
+  index = yml.indexOf("0.0.0.0:") + 8;
+  let port = "";
+  for(let i = index; i < yml.length; i++){
+    if(yml[i] == " " | yml[i] == "\n" | yml[i] == "\t"){
+      break
+    }else{
+      port += yml[i];
+    }
+  }
+
+  res += "http://" + ip + ":" + port + "/api/v1/"
+  return res
+}
+
+/*
+start server
+*/
+app.listen(serverport, () => {
+    console.log(addr + ` listening on port ${serverport}`);
+    getAllAccounts();
+});
+
+/*
+return json object with every account with his api and networkid
+*/
+function getAllAccounts(){
+  // Get document, or throw exception on error
+  try {
+    const doc = yaml.safeLoad(fs.readFileSync('./network0/docker-compose.yml', 'utf8'));
+    console.log(doc.services.raiden_0xdcc84f895097608a2470f0d9e8868ee53badb0f9.networks.raiden_net_0.ipv4_address);
+  } catch (e) {
+    console.log(e);
+  }
+  fs.readdirSync("./unused");
+  let count = countNetwork();
+  for(let i = 0; i < count; i++){
+
+  }
+}
+
+
 
 /*
   remove an account
@@ -326,21 +393,6 @@ async function test(){
   }
 }
 
-function getPrivkey(){
-    var keyObject = keythereum.importFromFile("83dcaf6e583c3cd4a261e69fc07797de8f107380", "./");
-    var privateKey = keythereum.recover("1234", keyObject);
-    getPublicKey(privateKey);
-};
-
-function getPublicKey(privKey){
-  var public = Wallet.fromPrivateKey(privKey)
-  getAddress(public.getPublicKey())
-}
-
-function getAddress(pubKey){
-  console.log(createKeccakHash('keccak256').update(pubKey).digest('hex'))
-}
-
 /*
 returns a checksummed address from any ethereum address
 very importent to read keyfile.json and get address
@@ -402,6 +454,7 @@ function countNetwork(){
   return count;
 }
 
+//checksummed("0x4A077a9dd42726E722eF167c9363EEC318e40182");
 //addNetwork(2)
 //console.log(countNetwork());
 //getPrivkey();
