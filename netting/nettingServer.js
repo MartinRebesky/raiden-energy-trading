@@ -122,7 +122,7 @@ app.listen(serverport, () => {
 //write matches in smart contract and deploy on blockchain
 async function deployMatches(){
   //let matches = await matchHouseholds(await getHouseholds());
-  let matches = [["0x4A077a9dd42726E722eF167c9363EEC318e40182", "0x4A077a9dd42726E722eF167c9363EEC318e40182"],["0x4A077a9dd42726E722eF167c9363EEC318e40182", "0x4A077a9dd42726E722eF167c9363EEC318e40182"],["0x4A077a9dd42726E722eF167c9363EEC318e40182", "0x4A077a9dd42726E722eF167c9363EEC318e40182"]]
+  let matches = await matchHouseholds(await getHouseholds())
   if(matches.length <= 0){
     console.log("deployMatches: no matches")
     return false
@@ -154,6 +154,7 @@ async function deployMatches(){
 
   //send transaction
   await web3.eth.sendSignedTransaction("0x" + serializedTx.toString("hex"));
+  console.log("matches deployed")
 
 };
 

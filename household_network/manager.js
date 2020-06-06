@@ -42,7 +42,7 @@ const privKey = getPrivKey("1234");
 const tkn = "0x4A077a9dd42726E722eF167c9363EEC318e40182";
 const contractaddr = "0xcc77c453471c00af35d08f0103991cc604adf5a2";
 const rpcUrl = "https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01";
-const nettingAddr = "https://goerli.infura.io/v3/20a2ed4fef6248c2922a3d63fb004698";
+const nettingAddr = "0x18e663C2238cdB011e75d4c1E19910499259667A";
 
 /*
 returns a checksummed address from any ethereum address
@@ -89,46 +89,75 @@ function getPrivKey(password){
 }
 
 /*
-get api from docker-compose file
-*/
-function getApi(){
-  //get string from docker-compose.yml
-  let yml = fs.readFileSync("./docker-compose.yml", "UTF8");
-  res = ""
-
-  //get ip address
-  let index = yml.indexOf("ipv4_address: '") + 15;
-  ip = "";
-  for(let i = index; i < yml.length; i++){
-    if(yml[i] == "'"){
-      break
-    }else{
-      ip += yml[i];
-    }
-  }
-
-  //get port
-  index = yml.indexOf("0.0.0.0:") + 8;
-  let port = "";
-  for(let i = index; i < yml.length; i++){
-    if(yml[i] == " " | yml[i] == "\n" | yml[i] == "\t"){
-      break
-    }else{
-      port += yml[i];
-    }
-  }
-
-  res += "http://" + ip + ":" + port + "/api/v1/"
-  return res
-}
-
-/*
 start server
 */
 app.listen(serverport, () => {
     console.log(addr + ` listening on port ${serverport}`);
-    sendEther();
 });
+
+/*running a function every minute
+  checks if 15 minutes are over to send every 0, 15, 30, 45 minutes*/
+cron.schedule('* * * * *', () => {
+    let minutes = [0, 15, 30, 45]
+    let date = new Date();
+    console.log(date.getMinutes());
+    if(minutes.includes(date.getMinutes())){
+	     console.log("sending phase");
+	     doPayment();
+    }
+});
+
+/*
+opens a payment channel with the netting server
+*/
+async function openChannel(){
+  let accounts = getAllAccounts();
+  for(account of accounts){
+    let reqCheck = account.api + "channels/" + tkn + "/" + nettingAddr;
+    let resCheck = await axios.get(reqCheck, data);
+
+    if(resCheck.status != 200){
+      let req = account.api + "channels";
+      let data = {
+  	     "partner_address": netserver,
+  	     "token_address": tkn,
+  	     "total_deposit": "10000000000000000000",
+  	     "settle_timeout": "500"
+      };
+
+      axios.put(req, data).then(
+  	    response => {
+  		      console.log(response.data)
+  	    }
+  	  ).catch(err => {console.log(err)})
+    }
+  }
+}
+
+/*
+send smart meter data to netting server
+*/
+async function doPayment(){
+  let accounts = getAllAccounts();
+  for(account of accounts){
+    let reqCheck = account.api + "channels/" + tkn + "/" + nettingAddr;
+    let resCheck = await axios.get(reqCheck, data);
+
+    if(resCheck.status == 200){
+      let req = account.api + 'payments/' + tkn + "/" + nettingAddr;
+      let data = {
+        "amount": "1",
+        "identifier": Math.floor((Math.random() * 2) + 1) + "50"
+      };
+
+      axios.post(req, data).then(
+        response => {
+          console.log(response.data)
+        }
+      ).catch(err => {console.log(err)})
+    }
+  }
+}
 
 /*
 returns array with all accounts with address, api and networkid
@@ -301,16 +330,17 @@ async function sendEther(){
   if a raiden client has not allready joined the tokennetwork, then mint tokens and join the tokennetwork
 */
 async function checkTokenNetwork(){
-  for(account of accounts.used){
+  let accounts = getAllAccounts();
+  for(account of accounts){
     try {
       x = await axios.get(account.api + "connections");
       if(!x.data.hasOwnProperty(tkn)){
-        mintAndJoinToken(account.addr);
+        mintAndJoinToken(account.address);
       }else{
-        console.log(account.addr + " allready joined")
+        console.log(account.address + " allready joined")
       }
     } catch (e) {
-      console.log(account.addr + " not online")
+      console.log(account.address + " not online")
     }
   }
 }
@@ -321,11 +351,12 @@ async function checkTokenNetwork(){
 */
 
 function mintAndJoinToken(addr){
-  for (account of accounts.used){
-    if(account.addr == addr){
+  let accounts = getAllAccounts();
+  for (account of accounts){
+    if(account.address == addr){
       let connect = account.api + "_testing/tokens/" + tkn + "/mint";
       let data = {
-  	     "to": account.addr,
+  	     "to": account.address,
   	      "value": 51000000000000000000
       };
 
@@ -344,8 +375,9 @@ function mintAndJoinToken(addr){
   join the tokennetwork
 */
 function joinTokennetwork(addr){
-  for(account of accounts.used){
-    if(account.addr == addr){
+  let accounts = getAllAccounts();
+  for(account of accounts){
+    if(account.address == addr){
       let connect = account.api + "connections/" + tkn;
       let data = {
   	     "funds":50000000000000000000
@@ -368,7 +400,8 @@ function joinTokennetwork(addr){
   @param open = boolean. if no open payment channel -> join or not (true, false)
 */
 async function checkPaymentChannel(join){
-  for(account of accounts.used){
+  let accounts = getAllAccounts();
+  for(account of accounts){
     try {
       response = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr);
       console.log(response.data)
@@ -385,8 +418,9 @@ async function checkPaymentChannel(join){
   return and print all used accounts
 */
 function getUsedAccounts(){
+  let accounts = getAllAccounts();
   let res = [];
-  for(account of accounts.used){
+  for(account of accounts){
     console.log(account);
     res.push(account);
   }
@@ -398,14 +432,15 @@ function getUsedAccounts(){
   checks if all used raiden clients are online
 */
 async function checkOnline(){
-  for(account of accounts.used){
+  let accounts = getAllAccounts();
+  for(account of accounts){
     try {
       response = await axios.get(account.api + "address");
       if(response.data.our_address != undefined){
         console.log(response.data.our_address + " is online")
       }
     } catch (e) {
-      console.log(account.addr + " is not online");
+      console.log(account.address + " is not online");
     }
   }
 }
@@ -479,30 +514,3 @@ function countNetwork(){
   }
   return count;
 }
-
-//checksummed("0x4A077a9dd42726E722eF167c9363EEC318e40182");
-//addNetwork(2)
-//console.log(countNetwork());
-//getPrivkey();
-//writeDockerCompose();
-//getUsedAccounts();
-//checkPaymentChannel(false);
-//checkOnline();
-//checkTokenNetwork();
-//sendEther();
-//add(10);
-
-
-/*
-app.get('/test', async(req, res) => {
-
-res.send(accounts);
-});
-
-
-
-app.listen(port, () => {
-    console.log(`Netting Server listening on ${port}`);
-
-});
-*/
