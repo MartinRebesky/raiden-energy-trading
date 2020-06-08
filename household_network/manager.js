@@ -1,6 +1,8 @@
 const express = require('express');
-const serverport = process.env.PORT || 9000;
 const app = express();
+const fileUpload = require("express-fileupload")
+const serverport = process.env.PORT || 9000;
+
 const fs = require('fs');
 const yaml = require('js-yaml');
 const Web3 = require('web3');
@@ -12,11 +14,13 @@ const { SHA3 } = require('sha3');
 
 const Wallet = require('ethereumjs-wallet')
 const createKeccakHash = require('keccak')
-
-
-
-
 const cron = require('node-cron');
+
+var $ = jQuery = require('jquery');
+
+
+
+
 const axios = require('axios');
 const bodyParser = require('body-parser');
 
@@ -433,16 +437,25 @@ function getUsedAccounts(){
 */
 async function checkOnline(){
   let accounts = getAllAccounts();
+  let res = [];
   for(account of accounts){
     try {
-      response = await axios.get(account.api + "address");
-      if(response.data.our_address != undefined){
-        console.log(response.data.our_address + " is online")
+      response = await axios.get(account.api + "status");
+      if(response.status == 200 && response.data.status == "ready"){
+        console.log(account.address + " is ready")
+        res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "online"})
+      }else if(response.status == 200 && response.data.status == "syncing" ){
+        console.log(account.address + " is online")
+        res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "syncing"})
+      }else{
+        res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "offline"})
       }
     } catch (e) {
       console.log(account.address + " is not online");
+      res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "offline"})
     }
   }
+  return res;
 }
 
 async function test(){
@@ -514,3 +527,20 @@ function countNetwork(){
   }
   return count;
 }
+
+/*
+---------------server api begin---------------
+*/
+
+app.use(express.static("data"));
+app.use(fileUpload());
+
+app.get('/', function (req,res) {
+  getAllAccounts();
+  res.sendFile(__dirname + '/data/index.html');
+});
+
+app.get('/allAccounts', async function (req,res) {
+  let checkedAccounts = await checkOnline();
+  res.send(checkedAccounts);
+});
