@@ -444,10 +444,11 @@ async function checkOnline(){
       if(response.status == 200 && response.data.status == "ready"){
         console.log(account.address + " is ready")
         res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "online"})
-      }else if(response.status == 200 && response.data.status == "syncing" ){
-        console.log(account.address + " is online")
+      }else if(response.status == 200 && response.data.status == "unavailable" ){
+        console.log(account.address + " is syncing")
         res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "syncing"})
       }else{
+        console.log(account.address + " is offline")
         res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "offline"})
       }
     } catch (e) {
@@ -528,6 +529,18 @@ function countNetwork(){
   return count;
 }
 
+async function startRaidennetwork(networkid){
+  counter = countNetwork();
+  if(networkid != -1  && networkid < counter){
+    await child_process.execSync("cd network" + networkid + "; docker-compose down");
+    child_process.exec("gnome-terminal -x sh -c 'cd network" + networkid + "; docker-compose up'");
+  }else if(networkid == -1){
+    for(let i = 0; i < counter; i++){
+      startRaidennetwork(i);
+    }
+  }
+}
+
 /*
 ---------------server api begin---------------
 */
@@ -540,7 +553,12 @@ app.get('/', function (req,res) {
   res.sendFile(__dirname + '/data/index.html');
 });
 
-app.get('/allAccounts', async function (req,res) {
+app.get("/allAccounts", async function (req, res) {
   let checkedAccounts = await checkOnline();
   res.send(checkedAccounts);
+});
+
+app.post("/startServices", function (req, res){
+  startRaidennetwork(-1);
+  res.send("ok")
 });
