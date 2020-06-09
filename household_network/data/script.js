@@ -5,7 +5,7 @@ $(document).ready ( function(){
    getAccounts();
 });
 
-var checkAccounts = window.setInterval(getAccounts, 30000);
+var checkAccounts = window.setInterval(getAccounts, 10000);
 
 /*
 load all accounts in DOM
@@ -17,13 +17,15 @@ function getAccounts(){
           data: { get_param: 'value' },
           success: function (data) {
               let accounts = data;
+              console.log(data)
               var res = document.createElement("div");
               let counter = countNetwork(accounts);
               for(let i = 0; i < counter; i++){
                 var div = document.createElement("div");
                 div.class = "network";
                 let h1 = document.createElement("h1");
-                h1.innerHTML = "Netzwerk" + (i+1);
+                h1.innerHTML = "Netzwerk" + (i+1) + " <button type='button' onclick='startServices(" + i + ")'>Netzwerk neustart</button>";
+
                 div.appendChild(h1);
 
                 var table = document.createElement("table")
@@ -64,8 +66,31 @@ function getAccounts(){
 /*
 post start specific network
 */
-async function startServices(network){
-      $.post("http://localhost:9000/startServices", network);
+async function startServices(networkid){
+  $.post("http://localhost:9000/startServices", {"networkid": networkid});
+}
+
+/*
+post stop specific network
+*/
+async function stopServices(networkid){
+  $.post("http://localhost:9000/stopServices", {"networkid": networkid});
+}
+
+/*
+post add n networks
+*/
+async function addNetwork(){
+  let n = document.getElementById("n").value;
+  $.post("http://localhost:9000/addNetwork", {"n": n});
+}
+
+/*
+post remove n networks
+*/
+async function removeNetwork(){
+  let n = document.getElementById("n").value;
+  $.post("http://localhost:9000/removeNetwork", {"n": n});
 }
 
 function countNetwork(accounts){

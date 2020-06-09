@@ -31,7 +31,10 @@ const ansi = require('ansicolor').nice
 
 require('dotenv').config()
 
-
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
+app.use(express.json());
 app.use(bodyParser.json());
 app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -205,34 +208,60 @@ function getAllAccounts(){
   return res;
 }
 
-
-
 /*
-  remove an account
-  accounts are moved to unused and removed from used
+adds n networks
 */
+function addNetwork(n){
+
+  unused = fs.readdirSync("./unused");
+  for(network of unused){
+    if(n <= 0){
+      break;
+    }
+    fs.renameSync("./unused/" + network, "./" + network);
+    n--;
+  }
+
+  networkCount = countNetwork();
+  for(n; n > 0; n--){
+    if(networkCount >= 12){
+      console.log("only 12 networks where allowed. Networks set to maximum")
+      return
+    }
+    fs.mkdirSync("./network" + networkCount);
+    fs.mkdirSync("./network" + networkCount + "/data")
+    fs.writeFileSync("./network" + networkCount + "/data/password.txt", "1234");
+    fs.writeFileSync("./network" + networkCount + "/docker-compose.yml");
+    fs.copyFileSync("./data/Dockerfile", "./network" + networkCount + "/Dockerfile")
+    for(let i = 0; i < 5; i++){
+      child_process.execSync("geth account new --datadir ./network" + networkCount + "/data --password ./network" + networkCount + "/data/password.txt");
+    }
+    writeDockerCompose(networkCount)
+    networkCount++;
+  }
+}
+
 /*
-function remove(n){
-  if(n > accounts.used.length){
+  removes n networks
+  networks are moved to unused and removed from use
+*/
+
+function removeNetwork(n){
+  networkcount = countNetwork();
+  if(n > networkcount){
     console.log("not so many accounts available");
     return false;
   }
 
-  for(let i = 0; i < n; i++){
-    account = accounts.used.pop();
-    accounts.unused.push(account);
-    try {
-      fs.renameSync("./network/data/keystore/used/" + account.keyfile, "./network/data/keystore/unused/" + account.keyfile);
-    } catch (e) {
-      console.log(e)
-    }
+  for(let i = networkcount - 1; n > 0; i--, n--){
+
+    child_process.execSync("cd network" + i + "; docker-compose down");
+    fs.renameSync("./network" + i, "./unused/network" + i);
 
   }
-  fs.writeFileSync("./network/accounts.json", JSON.stringify(accounts));
-  writeDockerCompose();
-  console.log("removed accounts");
+  console.log("removed " + n + " accounts");
 }
-*/
+
 
 /*write the docker-compose.yml for every used account
   create 1 network for 5 accounts
@@ -440,19 +469,15 @@ async function checkOnline(){
   let res = [];
   for(account of accounts){
     try {
-      response = await axios.get(account.api + "status");
+      response = await axios.get(account.api + "status", {timeout: 500});
       if(response.status == 200 && response.data.status == "ready"){
-        console.log(account.address + " is ready")
         res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "online"})
       }else if(response.status == 200 && response.data.status == "unavailable" ){
-        console.log(account.address + " is syncing")
         res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "syncing"})
       }else{
-        console.log(account.address + " is offline")
         res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "offline"})
       }
     } catch (e) {
-      console.log(account.address + " is not online");
       res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "offline"})
     }
   }
@@ -486,36 +511,6 @@ function checksummed(address) {
       }
     }
     return res
-};
-
-function addNetwork(n){
-
-  unused = fs.readdirSync("./unused");
-  for(network of unused){
-    if(n <= 0){
-      break;
-    }
-    fs.renameSync("./unused/" + network, "./" + network);
-    n--;
-  }
-
-  networkCount = countNetwork();
-  for(n; n > 0; n--){
-    if(networkCount >= 12){
-      console.log("only 12 networks where allowed. Networks set to maximum")
-      return
-    }
-    fs.mkdirSync("./network" + networkCount);
-    fs.mkdirSync("./network" + networkCount + "/data")
-    fs.writeFileSync("./network" + networkCount + "/data/password.txt", "1234");
-    fs.writeFileSync("./network" + networkCount + "/docker-compose.yml");
-    fs.copyFileSync("./data/Dockerfile", "./network" + networkCount + "/Dockerfile")
-    for(let i = 0; i < 5; i++){
-      child_process.execSync("geth account new --datadir ./network" + networkCount + "/data --password ./network" + networkCount + "/data/password.txt");
-    }
-    writeDockerCompose(networkCount)
-    networkCount++;
-  }
 }
 
 function countNetwork(){
@@ -529,14 +524,33 @@ function countNetwork(){
   return count;
 }
 
+/*
+starts the specific raiden network with networkid
+if networkid = -1 starts all raiden networks
+*/
 async function startRaidennetwork(networkid){
   counter = countNetwork();
   if(networkid != -1  && networkid < counter){
     await child_process.execSync("cd network" + networkid + "; docker-compose down");
-    child_process.exec("gnome-terminal -x sh -c 'cd network" + networkid + "; docker-compose up'");
+    child_process.exec("gnome-terminal --title='network'" + networkid + " -x sh -c 'cd network" + networkid + "; docker-compose up'");
   }else if(networkid == -1){
     for(let i = 0; i < counter; i++){
       startRaidennetwork(i);
+    }
+  }
+}
+
+/*
+stops the specific raiden network with networkid
+if networkid = -1 stops all raiden networks
+*/
+async function stopRaidenNetwork(networkid){
+  counter = countNetwork();
+  if(networkid != -1  && networkid < counter){
+    child_process.exec("cd network" + networkid + "; docker-compose down");
+  }else if(networkid == -1){
+    for(let i = 0; i < counter; i++){
+      stopRaidenNetwork(i);
     }
   }
 }
@@ -559,6 +573,38 @@ app.get("/allAccounts", async function (req, res) {
 });
 
 app.post("/startServices", function (req, res){
-  startRaidennetwork(-1);
+  networkid = req.body.networkid
+  startRaidennetwork(networkid);
   res.send("ok")
+});
+
+app.post("/stopServices", function (req, res){
+  networkid = req.body.networkid
+  console.log("stop")
+  stopRaidenNetwork(networkid);
+  res.send("ok")
+});
+
+app.post("/addNetwork", function (req, res){
+  n = req.body.n
+  if(n == undefined | isNaN(n)){
+    res.send("n is not a number")
+  }else{
+    console.log("add " + n + " networks")
+    addNetwork(n);
+  }
+
+  res.send("ok")
+});
+
+app.post("/removeNetwork", function (req, res){
+  n = req.body.n
+  if(n == undefined | isNaN(n)){
+    res.send("n is not a number")
+  }else{
+  console.log("remove " + n + " networks")
+  removeNetwork(n);
+  }
+  res.send("ok")
+
 });
