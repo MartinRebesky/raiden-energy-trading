@@ -18,6 +18,14 @@ const cron = require('node-cron');
 
 var $ = jQuery = require('jquery');
 
+var checkedHashes = [];
+var checkedTokennetwork = [];
+var timeStart;
+var timeEnd;
+
+var einsatz = true;
+var durchgang = 0;
+
 
 
 
@@ -46,10 +54,18 @@ app.use(function(req, res, next) {
 /*start*/
 const addr = getManagerAddress();
 const privKey = getPrivKey("1234");
-const tkn = "0x4A077a9dd42726E722eF167c9363EEC318e40182";
+const tkn = "0x0321Aa034bED3a22CcFE91E169DB3E63830ad239";
 const contractaddr = "0xcc77c453471c00af35d08f0103991cc604adf5a2";
 const rpcUrl = "https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01";
-const nettingAddr = "0x18e663C2238cdB011e75d4c1E19910499259667A";
+const nettingAddr = "0x5ED6BDE157ECc2C8A189D192b5C7139E62260044";
+
+/*
+start server
+*/
+app.listen(serverport, () => {
+  console.log(addr + ` listening on port ${serverport}`);
+	checkTokenNetwork();
+});
 
 /*
 returns a checksummed address from any ethereum address
@@ -95,75 +111,147 @@ function getPrivKey(password){
 
 }
 
-/*
-start server
-*/
-app.listen(serverport, () => {
-    console.log(addr + ` listening on port ${serverport}`);
-});
-
 /*running a function every minute
   checks if 15 minutes are over to send every 0, 15, 30, 45 minutes*/
 cron.schedule('* * * * *', () => {
-    let minutes = [0, 15, 30, 45]
+    let sends = [0, 15, 30, 45];
+		let checks = [3, 18, 33, 48];
+		let scenario = [5, 20, 35, 50];
     let date = new Date();
     console.log(date.getMinutes());
-    if(minutes.includes(date.getMinutes())){
+    if(sends.includes(date.getMinutes())){
 	     console.log("sending phase");
-	     doPayment();
+			 //durchgang++;
+	     sendMeterDataAll();
     }
+		if(checks.includes(date.getMinutes())){
+			console.log("checking phase");
+			checkRaidenClients();
+		}
+		if(scenario.includes(date.getMinutes())){
+			console.log("einsatz phase");
+			einsatzszenario();
+		}
+
 });
+
+/*
+	opens for all accounts a payment channel with the netting server
+*/
+async function openChannelAll(){
+	let accounts = getAllAccounts();
+	for(account of accounts){
+		openChannel(account);
+	}
+}
+
+async function sendMeterDataAll(){
+	let accounts = getSmartMeterData();
+	for(account of accounts){
+		sendMeterData(account);
+	}
+}
 
 /*
 opens a payment channel with the netting server
 */
-async function openChannel(){
-  let accounts = getAllAccounts();
-  for(account of accounts){
-    let reqCheck = account.api + "channels/" + tkn + "/" + nettingAddr;
-    let resCheck = await axios.get(reqCheck, data);
-
-    if(resCheck.status != 200){
-      let req = account.api + "channels";
-      let data = {
-  	     "partner_address": netserver,
-  	     "token_address": tkn,
-  	     "total_deposit": "10000000000000000000",
-  	     "settle_timeout": "500"
-      };
-
-      axios.put(req, data).then(
-  	    response => {
-  		      console.log(response.data)
-  	    }
-  	  ).catch(err => {console.log(err)})
-    }
-  }
+async function openChannel(account){
+	try{
+		//check if the account has an open Channel with the netting server
+		check = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 1000})
+	}catch(err){
+		if(err.response == undefined){
+			return
+		}else if(err.response.status == 404){
+			let req = account.api + "channels";
+			let data = {
+				"partner_address": nettingAddr,
+				"token_address": tkn,
+				"total_deposit": "10000000000000000000",
+				"settle_timeout": "500"
+			};
+			axios.put(req, data)
+				.then(response => {
+					console.log(response.data)
+				})
+				.catch(err => {
+					console.log(err)
+				});
+		}
+	}
 }
+
+/*
+closes a payment channel with the netting server
+async function closeChannel(addr){
+  let account = getAllAccounts().filter(acc => acc.address == addr)[0];
+	try{
+	//check if the account has an open Channel with the netting server
+	let check = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 500});
+	console.log(check.response);
+	//if an open channel exists -> close
+	if(check.status == 200 && check.data.state == "opened"){
+		let req = account.api + "channels/" + tkn + "/" + nettingAddr;
+		let data = {
+			"state": "closed"
+		};
+		axios.patch(req, data).then(
+			  	    response => {
+			  		      console.log(response.data)
+			  	    })
+			    }
+				}catch(e){
+					console.log(account.address + " is offline or no open payment channel")
+				}
+		}
+	}else{
+		for(account of accounts){
+			closeChannel(account.addr);
+		}
+	}
+}
+
 
 /*
 send smart meter data to netting server
 */
-async function doPayment(){
-  let accounts = getAllAccounts();
-  for(account of accounts){
-    let reqCheck = account.api + "channels/" + tkn + "/" + nettingAddr;
-    let resCheck = await axios.get(reqCheck, data);
+async function sendMeterData(account){
+	try {
+		//check if an open channel with the netting server exists
+		let check = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 500});
+		if(check.status == 200 && check.data.state == "opened"){
+			let req = account.api + 'payments/' + tkn + "/" + nettingAddr;
+		  let data = {
+		  	"amount": "1",
+		  	"identifier": account.kwh
+		  };
+			console.log(req)
+			console.log(data)
+			axios.post(req, data)
+				.then(response => { console.log(response.data)})
+				.catch(err => {console.log(err.data)})
+		 }
+	}catch(err){
+		console.log(account.address + " is offline or has no open Payment Channel with the Netting Server")
+	}
+}
 
-    if(resCheck.status == 200){
-      let req = account.api + 'payments/' + tkn + "/" + nettingAddr;
-      let data = {
-        "amount": "1",
-        "identifier": Math.floor((Math.random() * 2) + 1) + "50"
-      };
-
-      axios.post(req, data).then(
-        response => {
-          console.log(response.data)
-        }
-      ).catch(err => {console.log(err)})
-    }
-  }
+function getSmartMeterData(){
+	let res = [];
+	let accounts = getAllAccounts();
+	let count = 1;
+	let kwh = 0;
+	for(account of accounts){
+		if(count % 5 == 0){
+			res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "kwh": "1" + Math.round(kwh*(-1.5))})
+		}else{
+			accountKwh = Math.floor((Math.random() * 100) + 1);
+			kwh -= accountKwh;
+			res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "kwh": "2" + Math.round(accountKwh)})
+		}
+		count++;
+	}
+	return res;
 }
 
 /*
@@ -350,25 +438,43 @@ async function sendEther(){
 
       //send transaction
       let serializedTx = transaction.serialize();
-      await web3.eth.sendSignedTransaction("0x" + serializedTx.toString("hex"));
+      await web3.eth.sendSignedTransaction("0x" + serializedTx.toString("hex"), function(err, result){console.log(result)});
+			let blocknumber = await web3.eth.getBlockNumber();
+			let newBlocknumber = blocknumber
+			while(newBlocknumber < blocknumber + 2){
+				newBlocknumber = await web3.eth.getBlockNumber();
+			}
       console.log("send 0.01 goerli ether to " + account.address);
     } catch(err){
-    sendEther();
+    console.log(err)
     }
   }
+	console.log("successfully send ether to all accounts")
 }
+
+function wait(ms){
+    var d = new Date();
+    var d2 = null;
+    do { d2 = new Date(); }
+    while(d2-d < ms);
+}
+
 
 //tokennetwork request start
 /*
   if a raiden client has not allready joined the tokennetwork, then mint tokens and join the tokennetwork
 */
 async function checkTokenNetwork(){
+	let web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
   let accounts = getAllAccounts();
   for(account of accounts){
     try {
-      x = await axios.get(account.api + "connections");
+			if(await web3.utils.fromWei( await web3.eth.getBalance(account.address)) < 0.005){
+				continue;
+			}
+      x = await axios.get(account.api + "connections", {timeout: 1000});
       if(!x.data.hasOwnProperty(tkn)){
-        mintAndJoinToken(account.address);
+        mintAndJoinToken(account);
       }else{
         console.log(account.address + " allready joined")
       }
@@ -383,48 +489,31 @@ async function checkTokenNetwork(){
   if succesfully minted some tokens, then join the tokennetwork
 */
 
-function mintAndJoinToken(addr){
-  let accounts = getAllAccounts();
-  for (account of accounts){
-    if(account.address == addr){
-      let connect = account.api + "_testing/tokens/" + tkn + "/mint";
-      let data = {
-  	     "to": account.address,
-  	      "value": 51000000000000000000
-      };
-
-      axios.post(connect, data).then(
-  	    response => {
-  		      console.log(addr + " minted tokens")
-            joinTokennetwork(addr);
-  	    }
-  	  ).catch(err => {console.log(addr + ": minting failed")});
-      break;
-    }
-  }
+function mintAndJoinToken(account){
+	let connect = account.api + "_testing/tokens/" + tkn + "/mint";
+  let data = {
+  	"to": account.address,
+  	"value": 51000000000000000000
+  };
+	axios.post(connect, data)
+		.then(response => {
+  		console.log(addr + " minted tokens")
+      joinTokennetwork(account);
+  	 })
+		 .catch(err => {console.log(addr + ": minting failed")});
 }
 
 /*
   join the tokennetwork
 */
-function joinTokennetwork(addr){
-  let accounts = getAllAccounts();
-  for(account of accounts){
-    if(account.address == addr){
-      let connect = account.api + "connections/" + tkn;
-      let data = {
-  	     "funds":50000000000000000000
-      };
-
-      axios.put(connect, data).then(
-  	    response => {
-  		      console.log(addr + " joined tokennetwork");
-  	    }
-  	).catch(err => {console.log(addr + ": join tokennetwork failed")});
-    break;
-    }
-
-  }
+function joinTokennetwork(account){
+	let connect = account.api + "connections/" + tkn;
+  let data = {
+  	"funds":50000000000000000000
+  };
+	axios.put(connect, data)
+		.then(response => {console.log(addr + " joined tokennetwork")})
+		.catch(err => {console.log(addr + ": join tokennetwork failed")});
 }
 //tokennetwork requests end
 
@@ -464,25 +553,110 @@ function getUsedAccounts(){
 /*
   checks if all used raiden clients are online
 */
-async function checkOnline(){
+async function getStatus(){
   let accounts = getAllAccounts();
-  let res = [];
+  let status = [];
   for(account of accounts){
     try {
       response = await axios.get(account.api + "status", {timeout: 500});
       if(response.status == 200 && response.data.status == "ready"){
-        res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "online"})
+        status.push({"address": account.address, "status": "online"})
       }else if(response.status == 200 && response.data.status == "unavailable" ){
-        res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "syncing"})
+        status.push({"address": account.address, "status": "syncing"})
       }else{
-        res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "offline"})
+        status.push({"address": account.address, "status": "offline"})
       }
     } catch (e) {
-      res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "status": "offline"})
+      status.push({"address": account.address,  "status": "offline"})
     }
-  }
-  return res;
+	}
+  return status;
 }
+
+async function getStatusChannel(){
+	let accounts = getAllAccounts();
+  let status = [];
+  for(account of accounts){
+    try {
+      response = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 500});
+      if(response.status == 200){
+        status.push({"address": account.address, "status": response.data.state, "balance": response.data.balance})
+      }else{
+        status.push({"address": account.address, "status": "closed"})
+      }
+    } catch (e) {
+      status.push({"address": account.address,  "status": "closed"})
+    }
+	}
+  return status;
+}
+
+async function getStatusTokennetwork(){
+	let accounts = getAllAccounts();
+  let status = [];
+  for(account of accounts){
+    try {
+      response = await axios.get(account.api + "tokens/" + tkn, {timeout: 500});
+      if(response.status == 200){
+        status.push({"address": account.address, "status": "true"})
+      }else{
+        status.push({"address": account.address, "status": "false"})
+      }
+    } catch (e) {
+      status.push({"address": account.address,  "status": "false"})
+    }
+	}
+  return status;
+}
+
+async function getCheckedAccounts(){
+	let allStatus = await getStatus();
+	let allStatusChannels = await getStatusChannel();
+	let allAccounts = await getAllAccounts();
+	let allStatusTokennetwork = await getStatusTokennetwork();
+	let res = [];
+	for(i in allStatus){
+		res.push({"address": allStatus[i].address, "api":  allAccounts[i].api,"status": allStatus[i].status, "statusChannel": allStatusChannels[i].status, "statusTokennetwork": allStatusTokennetwork[i].status, "networkid": allAccounts[i].networkid});
+	}
+	return res;
+}
+
+/*
+	checks if an Raiden client is offline
+	if so then start the specific networks
+*/
+async function checkRaidenClients(){
+	let accounts = await getCheckedAccounts();
+	let networks = [];
+	for(account of accounts){
+		if(account.status != "online"){
+			if(!networks.include(account.networkid)){
+				networks.push(account.networkid)
+			}
+		}
+	}
+	for(network of networks){
+		startRaidennetwork(network);
+	}
+
+}
+
+/*
+	if the smart meter data where send 4 times then add 2 networks and start
+*/
+function einsatzszenario(){
+	if(durchgang == 4){
+		durchgang = 0;
+		let count = countNetwork();
+		if(count < 10){
+			addNetwork(2);
+			startRaidennetwork(count);
+			startRaidennetwork(count + 1);
+		}
+	}
+}
+
+
 
 async function test(){
   try {
@@ -556,6 +730,64 @@ async function stopRaidenNetwork(networkid){
 }
 
 /*
+	checks a given hash with the last payment sent to the netting server
+*/
+
+async function checkHashes(hashes){
+	res = [];
+	let web3 = new Web3();
+	let accounts = getAllAccounts();
+	for(hashobj of hashes){
+		let account = accounts.find(account => account.address == hashobj.address);
+		if(account == undefined){
+			continue;
+		}else{
+			try {
+				let payments = await axios.get(account.api + "payments/" + tkn + "/" + nettingAddr);
+				for(payment of payments.data){
+					if(payment.event == "EventPaymentSentSuccess"){
+						let channelObject = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr);
+			      //create object that has to be hashed
+			      let object = {"target": nettingAddr, "initiator": account.address, "identifier": payment.identifier, "hashed_identifier": web3.utils.sha3(payment.identifier), "token_address": tkn, "amount": payment.amount, "channel_identifier": channelObject.data.channel_identifier};
+			      let hash = web3.utils.sha3(JSON.stringify(object));
+						if(hash == hashobj.hash){
+							res.push({"address": account.address, "netting_Hash": hashobj.hash, "household_hash": hash, "verify": true});
+						}else{
+							res.push({"address": account.address, "netting_Hash": hashobj.hash, "household_hash": hash, "verify": false});
+						}
+					}
+				}
+			} catch (e) {
+				console.log(e)
+			}
+		}
+	}
+
+	"write the checked hashes in the array checkedHashes"
+	for(checked of res){
+		let lastChecked = checkedHashes.find(account => account.address == checked.address);
+		if(lastChecked == undefined){
+			checkedHashes.push(checked);
+		}else{
+			lastChecked = checked;
+		}
+	}
+	timeEnd = new Date();
+	console.log("vom senden der smart meter Daten bis empfangen der Hashes hat es so lange gedauert: " + timeStart - timeEnd)
+}
+
+/*
+	checks the timestamp from the received messages by the netting server with the send messages by the households
+*/
+function checkMessages(messages){
+	account = getAllAccounts();
+	for(account of accounts){
+		let payments = axios.get(account.api + "/payments" + tkn + "/" + nettingAddr);
+		console.log(payments)
+	}
+}
+
+/*
 ---------------server api begin---------------
 */
 
@@ -567,26 +799,51 @@ app.get('/', function (req,res) {
   res.sendFile(__dirname + '/data/index.html');
 });
 
-app.get("/allAccounts", async function (req, res) {
-  let checkedAccounts = await checkOnline();
+app.get("/getCheckedAccounts", async function (req, res) {
+  let checkedAccounts = await getCheckedAccounts();
   res.send(checkedAccounts);
 });
 
+app.get("/getAddresses", async function (req, res) {
+  let checkedAccounts = await checkOnline();
+	var addresses = [];
+
+	console.log(addresses);
+	for(account of checkedAccounts){
+		console.log(account.address);
+		addresses.push({"address": account.address, "api": account.api});
+	}
+  res.send(await addresses);
+});
+
 app.post("/startServices", function (req, res){
-  networkid = req.body.networkid
+  let networkid = req.body.networkid
   startRaidennetwork(networkid);
   res.send("ok")
 });
 
 app.post("/stopServices", function (req, res){
-  networkid = req.body.networkid
+  let networkid = req.body.networkid;
   console.log("stop")
   stopRaidenNetwork(networkid);
   res.send("ok")
 });
 
+app.post("/hash", async function(req, res){
+	let hash = req.body.hash;
+	let address = req.body.address
+	let checked = await checkHash(address, body);
+	console.log(checked);
+	res.send(checked)
+});
+
+app.get("/getStatusChannel", async function (req, res) {
+  let status = await getStatusChannel();
+  res.send(status);
+});
+
 app.post("/addNetwork", function (req, res){
-  n = req.body.n
+  let n = req.body.n
   if(n == undefined | isNaN(n)){
     res.send("n is not a number")
   }else{
@@ -607,4 +864,30 @@ app.post("/removeNetwork", function (req, res){
   }
   res.send("ok")
 
+});
+
+app.post("/postHashes", function(req, res){
+	let postedHashes = req.body.hashes;
+	res.send("hashes received")
+	checkHashes(postedHashes);
+});
+
+app.post("/receivedMessages", async function (req, res){
+	let messages = req.body.messages;
+	checkMessages(messages);
+});
+
+app.get("/hashes", function(req, res){
+	res.send(checkedHashes);
+});
+
+app.post("/openChannel", function(req, res){
+	console.log(req.body.addr)
+	let addr = req.body.addr;
+	openChannel(addr);
+});
+
+app.post("/closeChannel", function(req, res){
+	let addr = req.body.addr;
+	closeChannel(addr);
 });

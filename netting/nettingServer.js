@@ -1,11 +1,13 @@
 const express = require('express');
+const app = express();
+const fileUpload = require("express-fileupload")
 
 const cron = require('node-cron');
-const app = express();
 const serverport = process.env.PORT || 8000;
 const axios = require('axios');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const child_process = require('child_process')
 
 const Web3 = require('web3');
 const solc = require('solc');
@@ -13,6 +15,8 @@ const Tx = require('ethereumjs-tx').Transaction;
 const keythereum = require("keythereum");
 const log = require('ololog').configure({ time: true });
 const ansi = require('ansicolor').nice
+
+const timezone = 2;
 
 require('dotenv').config()
 
@@ -26,11 +30,11 @@ app.use(function(req, res, next) {
 });
 
 /*start*/
-//const addr = "0x18e663C2238cdB011e75d4c1E19910499259667A";
+//const addr = "0xF3457dADCF2E4F6fD2bBcfd2fAE3814e6A3cDBCd";
 const addr = checksummed();
 const privKey = getPrivKey("1234") //password from first keyfile of keystores
 const api = getApi();
-const tkn = "0x4A077a9dd42726E722eF167c9363EEC318e40182";
+const tkn = "0x0321Aa034bED3a22CcFE91E169DB3E63830ad239";
 const contractaddr = "0xcc77c453471c00af35d08f0103991cc604adf5a2";
 const rpcUrl = "https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01";
 
@@ -117,6 +121,7 @@ start server
 */
 app.listen(serverport, () => {
     console.log(addr + ` listening on port ${serverport}`);
+    startRaidenClient();
 });
 
 //write matches in smart contract and deploy on blockchain
@@ -227,6 +232,107 @@ async function matchHouseholds(households){
 };
 
 /*
+  hashes every Payment received from each household
+  get all payments in the last 5 minutes
+*/
+async function hashPayments(){
+  let actDate = new Date();
+  let web3 = new Web3();
+  let accounts = [];
+  let hashes = [];
+  let payments = await axios.get(api + "payments/" + tkn);
+  console.log(payments.data)
+
+  for(payment of payments.data){
+    //if(accounts.includes(payment.initiator)){
+  //    continue;
+  //  }
+    accounts.push(payment.initiator);
+    let paymentDate = new Date(payment.log_time);
+    console.log("actual: ",actDate)
+    console.log("payment: ",paymentDate)
+
+    if((actDate - paymentDate)/60000 >= 7000){
+       break;
+    }else{
+      let channelObject = await axios.get(api + "channels/" + tkn + "/" + payment.initiator);
+      //create object that has to be hashed
+      let object = {"target": addr, "initiator": payment.initiator, "identifier": payment.identifier, "hashed_identifier": web3.utils.sha3(payment.identifier), "token_address": tkn, "amount": payment.amount, "channel_identifier": channelObject.data.channel_identifier};
+      let hash = web3.utils.sha3(JSON.stringify(object));
+      hashes.push({"address": payment.initiator, "hash": hash});
+    }
+  }
+
+  axios.post("http://localhost:9000/postHashes", {"hashes": hashes}).then(
+    response => {
+      console.log(response.data)
+    }
+  ).catch(err => {console.log(err)});
+}
+
+/*
+  if a raiden client has not allready joined the tokennetwork, then mint tokens and join the tokennetwork
+*/
+async function checkTokenNetwork(){
+    try {
+      x = await axios.get(api + "connections", {timeout: 500});
+      if(!x.data.hasOwnProperty(tkn)){
+        mintAndJoinToken();
+      }else{
+        console.log("Netting Server allready joined")
+      }
+    } catch (e) {
+      console.log(e);
+      console.log("Netting Server not online")
+    }
+}
+
+/*
+  mints token for every used account
+  if succesfully minted some tokens, then join the tokennetwork
+*/
+
+function mintAndJoinToken(){
+      let connect = api + "_testing/tokens/" + tkn + "/mint";
+      let data = {
+  	     "to": addr,
+  	      "value": 51000000000000000000
+      };
+
+      axios.post(connect, data).then(
+  	    response => {
+          console.log(response);
+  		      console.log("Netting Server minted tokens")
+            joinTokennetwork();
+  	    }
+  	  ).catch(err => {console.log(addr + ": minting failed")});
+}
+
+/*
+  join the tokennetwork
+*/
+function joinTokennetwork(){
+      let connect = api + "connections/" + tkn;
+      let data = {
+  	     "funds":4500
+      };
+
+      axios.put(connect, data).then(
+  	    response => {
+
+  		      console.log(response, "Netting Server joined tokennetwork");
+  	    }
+  	).catch(err => {
+      console.log(err);
+      console.log("Netting Server: join tokennetwork failed")});
+}
+
+async function startRaidenClient(){
+  await child_process.execSync("docker-compose down");
+  child_process.exec("gnome-terminal --title='netting raiden client' -x sh -c 'docker-compose up'");
+}
+
+/*
 running a function every minute
 checks if 15 minutes are over to receive and match the households every
 1, 16, 31, 46 minutes
@@ -238,7 +344,7 @@ cron.schedule('* * * * *', () => {
     console.log(date.getMinutes());
     if(minutes.includes(date.getMinutes())){
 	     console.log("matching phase");
-	     deployMatches();
+	     hashPayments();
     }
 });
 
@@ -352,3 +458,30 @@ async function getHouseholds(){
     console.log(res);
     return res;
 };
+
+async function checkStatus(){
+  try {
+    response = await axios.get(api + "status", {timeout: 5000});
+    if(response.status == 200 && response.data.status == "ready"){
+      return {"status": response.data.status}
+    }else{
+      return {"status": "not ready"}
+    }
+  }catch(e){
+    return "offline"
+  }
+}
+
+
+/*
+---------------server api begin---------------
+*/
+
+app.use(express.static("data"));
+app.use(fileUpload());
+
+app.get('/getStatusNetting', async function (req,res) {
+  status = await checkStatus();
+  res.send(status)
+
+});

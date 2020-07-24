@@ -2,20 +2,51 @@
 <html>
 
 <head>
-  <title>Raiden Manager</title>
+  <title>Docker Manager</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script type="text/javascript" src="script.js"></script>
-
 </head>
+
 <body>
+  Netting Server: <span id=status_netting display: inline>offline</span><br>
+
   <button type="button" name="start all clients" onclick="startServices(-1)">Alle Raiden Clients starten</button>
-  <button type="button" name="stop all clients" onclick="stopServices(-1)">Alle Raiden Clients stoppen</button>
-  <br>
+  <button type="button" name="stop all clients" onclick="stopServices(-1)">Alle Raiden Clients stoppen</button><br>
     <input type="number" id="n" name="quantity" min="1" max="20" required>
     <input type="submit" onclick="addNetwork()" value="hinzufügen">
     <input type="submit" onclick="removeNetwork()" value="löschen">
-<main id="networks">
 
-</main>
+<main id="networks">
+<div>
+  <h1>Netzwerk1 <button type="button" onclick="startServices(0)">Netzwerk neustart</button></h1>
+  <table width="100%" border="1">
+    <tr>
+      <th>0xdcc84f895097608A2470F0D9E8868eE53BAdB0f9</th>
+      <th>http://172.0.144.5:5001/api/v1/</th>
+      <th>online</th>
+    </tr>
+    <tr>
+      <th>0x6074f576Bea1E36d285143AFFeEB50774A9f3D44</th>
+      <th>http://172.0.144.6:5001/api/v1/</th>
+      <th>online</th>
+    </tr>
+    <tr>
+      <th>0x277ab8F86385B05b659f5F478f88D28702756535</th>
+      <th>http://172.0.144.7:5001/api/v1/</th>
+      <th>online</th>
+    </tr>
+    <tr>
+      <th>0xE29C0B929fF94cBe6D7e52B25030b0C3dAA19EC3</th>
+      <th>http://172.0.144.8:5001/api/v1/</th>
+      <th>online</th>
+    </tr>
+    <tr>
+      <th>0xDFEC2E4980095D76a1d83A441CD0e509ec67EF8c</th>
+      <th>http://172.0.144.9:5001/api/v1/</th>
+      <th>online</th>
+    </tr>
+  </table>
+</div>
+
 </body>
 </html>

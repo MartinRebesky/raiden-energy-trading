@@ -19,7 +19,7 @@ services:
       --environment-type development
       --api-address 0.0.0.0:5001
       --accept-disclaimer
-      --address "0x18e663C2238cdB011e75d4c1E19910499259667A"
+      --address "0xF3457dADCF2E4F6fD2bBcfd2fAE3814e6A3cDBCd"
       --password-file ./data/password.txt
       --web-ui
 

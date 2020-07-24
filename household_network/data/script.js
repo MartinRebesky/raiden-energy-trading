@@ -3,17 +3,25 @@
 $(document).ready ( function(){
    console.log("jquery loaded");
    getAccounts();
+   getStatusNetting();
+   //getAddresses();
 });
 
-var checkAccounts = window.setInterval(getAccounts, 10000);
+var countAccounts = 0;
+
+//update every 10 sec.
+//var checkAccounts = window.setInterval(getAccounts, 10000);
+var checkAccounts = window.setInterval(getStatusChannel, 5000);
+var checkAccounts = window.setInterval(getStatusNetting, 30000);
 
 /*
 load all accounts in DOM
+build all accounts in HTML
 */
 function getAccounts(){
       $.ajax({
           type: 'GET',
-          url: 'http://localhost:9000/allAccounts',
+          url: 'http://localhost:9000/getCheckedAccounts',
           data: { get_param: 'value' },
           success: function (data) {
               let accounts = data;
@@ -32,6 +40,7 @@ function getAccounts(){
                 table.width = "100%";
                 table.border = "1";
                 for(account of accounts){
+                  let networkid = account.api[11];
                   if(account.networkid == i){
                     var tr = document.createElement("tr");
                     tr.class = "account";
@@ -39,13 +48,33 @@ function getAccounts(){
                     let th1 = document.createElement("th");
                     let th2 = document.createElement("th");
                     let th3 = document.createElement("th");
-                    th1.innerHTML = account.address;
-                    th2.innerHTML = account.api;
-                    th3.innerHTML = account.status;
+                    let th4 = document.createElement("th");
+                    let th5 = document.createElement("th");
+                    let link = document.createElement("a")
+
+                    //get link to web ui
+                    let index = account.api.indexOf("/", 12)
+                    let linkStr = account.api.substring(0, index);
+                    link.href = linkStr
+                    link.innerHTML = account.address
+
+                    th1.appendChild(link);
+                    th2.innerHTML = account.status;
+
+                    //set status channel
+                    th3.id = "status_channel_" + account.address
+                    th3.innerHTML = account.statusChannel;
+
+                    //create buttons
+                    let string = "openChannel(" + account.address + ")"
+                    th4.innerHTML = " <button type='button' onclick='openChannel(\"" + account.address + "\")'>Channel öffnen</button>";
+                    th5.innerHTML = " <button type='button' onclick='closeChannel(\"" + account.address + "\")'>Channel schließen</button>";
 
                     tr.appendChild(th1);
                     tr.appendChild(th2);
                     tr.appendChild(th3);
+                    tr.appendChild(th4);
+                    tr.appendChild(th5);
 
                     table.appendChild(tr);
                   }
@@ -61,6 +90,46 @@ function getAccounts(){
 
         //document.getElementById("networks").innerHTML = "Networks";
       });
+}
+
+function getStatusNetting(){
+  console.log("hallo")
+  $.ajax({
+      type: 'GET',
+      url: 'http://localhost:8000/getStatusNetting',
+      data: { get_param: 'value' },
+      success: function (data) {
+        document.getElementById("status_netting").innerHTML = data.status;
+      }
+  });
+}
+
+function getStatusChannel(){
+  $.ajax({
+      type: 'GET',
+      url: 'http://localhost:9000/getStatusChannel',
+      data: { get_param: 'value' },
+      success: function (data) {
+        for(account of data){
+          let id = "status_channel_" + account.address
+          try{
+            document.getElementById(id).innerHTML = account.status;
+          }catch(e){
+
+          }
+        }
+
+      }
+  });
+}
+
+function openChannel(addr){
+  console.log(addr);
+  $.post("http://localhost:9000/openChannel", {"addr": "" + addr});
+}
+
+function closeChannel(addr){
+  $.post("http://localhost:9000/closeChannel", {"addr": "" + addr});
 }
 
 /*

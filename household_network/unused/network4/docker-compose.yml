@@ -1,22 +1,22 @@
 version: '3'
 networks:
-  raiden_net_2:
+  raiden_net_4:
     driver: bridge
     ipam:
       driver: default
       config:
-      - subnet: 172.2.144.0/16
+      - subnet: 172.4.144.0/16
 
 services:
-  raiden_0xad8b631d77d33fcf8461d27644c40a878a203dbc: 
+  raiden_0x04810e7dcaf1755d2b00791676542871dc8e6f03: 
     build:
       context: . 
       dockerfile: ./Dockerfile 
     volumes: 
       - './data:/data' 
     networks: 
-      raiden_net_2: 
-        ipv4_address: '172.2.144.5' 
+      raiden_net_4: 
+        ipv4_address: '172.4.144.5' 
     command: 
       --keystore-path ./data/keystore 
       --network-id goerli 
@@ -25,19 +25,19 @@ services:
       --environment-type development 
       --api-address 0.0.0.0:5001 
       --accept-disclaimer 
-      --address '0xad8B631D77d33FCF8461d27644c40a878a203dBc' 
+      --address '0x04810e7DcaF1755d2b00791676542871dC8E6F03' 
       --password-file ./data/password.txt
       --web-ui
 
-  raiden_0x2204629af995acc7259d3f00ec4ae2c891094d22: 
+  raiden_0xc5fcac5832f4e07675a8eeea1141e42106ec9028: 
     build:
       context: . 
       dockerfile: ./Dockerfile 
     volumes: 
       - './data:/data' 
     networks: 
-      raiden_net_2: 
-        ipv4_address: '172.2.144.6' 
+      raiden_net_4: 
+        ipv4_address: '172.4.144.6' 
     command: 
       --keystore-path ./data/keystore 
       --network-id goerli 
@@ -46,19 +46,19 @@ services:
       --environment-type development 
       --api-address 0.0.0.0:5001 
       --accept-disclaimer 
-      --address '0x2204629af995acc7259d3F00EC4aE2C891094d22' 
+      --address '0xc5fcac5832f4E07675A8EeEa1141E42106eC9028' 
       --password-file ./data/password.txt
       --web-ui
 
-  raiden_0xaa6b179f981ab044ffbf02f5da32432fa8ecc92e: 
+  raiden_0xe9ccd934853083ff28e839f0fe8c7b040f01251a: 
     build:
       context: . 
       dockerfile: ./Dockerfile 
     volumes: 
       - './data:/data' 
     networks: 
-      raiden_net_2: 
-        ipv4_address: '172.2.144.7' 
+      raiden_net_4: 
+        ipv4_address: '172.4.144.7' 
     command: 
       --keystore-path ./data/keystore 
       --network-id goerli 
@@ -67,19 +67,19 @@ services:
       --environment-type development 
       --api-address 0.0.0.0:5001 
       --accept-disclaimer 
-      --address '0xaa6B179F981AB044FfbF02F5dA32432fA8EcC92E' 
+      --address '0xe9cCd934853083ff28E839f0fe8c7B040f01251A' 
       --password-file ./data/password.txt
       --web-ui
 
-  raiden_0x2b1c6c8251e566e1bc962d49eb9adc3533a28528: 
+  raiden_0xb4d6f6b2f9227984c355bc94339d7be7a7bd0026: 
     build:
       context: . 
       dockerfile: ./Dockerfile 
     volumes: 
       - './data:/data' 
     networks: 
-      raiden_net_2: 
-        ipv4_address: '172.2.144.8' 
+      raiden_net_4: 
+        ipv4_address: '172.4.144.8' 
     command: 
       --keystore-path ./data/keystore 
       --network-id goerli 
@@ -88,19 +88,19 @@ services:
       --environment-type development 
       --api-address 0.0.0.0:5001 
       --accept-disclaimer 
-      --address '0x2B1C6c8251E566E1BC962D49Eb9ADC3533a28528' 
+      --address '0xb4D6f6b2F9227984c355bc94339d7bE7a7bd0026' 
       --password-file ./data/password.txt
       --web-ui
 
-  raiden_0xb71d816ee04435f367cda7ead7ccd5c03a6940fb: 
+  raiden_0x4cae7d23f390b1c115e0ddb6e1cccef7fca50526: 
     build:
       context: . 
       dockerfile: ./Dockerfile 
     volumes: 
       - './data:/data' 
     networks: 
-      raiden_net_2: 
-        ipv4_address: '172.2.144.9' 
+      raiden_net_4: 
+        ipv4_address: '172.4.144.9' 
     command: 
       --keystore-path ./data/keystore 
       --network-id goerli 
@@ -109,7 +109,7 @@ services:
       --environment-type development 
       --api-address 0.0.0.0:5001 
       --accept-disclaimer 
-      --address '0xb71D816Ee04435f367Cda7eAD7CCd5c03a6940FB' 
+      --address '0x4cae7d23f390b1C115E0Ddb6E1CCCeF7fCa50526' 
       --password-file ./data/password.txt
       --web-ui
 
