@@ -8,108 +8,107 @@ networks:
       - subnet: 172.0.144.0/16
 
 services:
-  raiden_0xb4610f3fee30b621ef0b03c5bf8621f7f7b426a4: 
+  raiden_0xa9eab11b4647dffb65738869483813ada2611231:
     build:
-      context: . 
-      dockerfile: ./Dockerfile 
-    volumes: 
-      - './data:/data' 
-    networks: 
-      raiden_net_0: 
-        ipv4_address: '172.0.144.5' 
-    command: 
-      --keystore-path ./data/keystore 
-      --network-id goerli 
-      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01 
-      --gas-price fast 
-      --environment-type development 
-      --api-address 0.0.0.0:5001 
-      --accept-disclaimer 
-      --address '0xb4610f3feE30b621EF0B03C5Bf8621F7f7b426a4' 
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - './data:/data'
+    networks:
+      raiden_net_0:
+        ipv4_address: '172.0.144.5'
+    command:
+      --keystore-path ./data/keystore
+      --network-id goerli
+      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
+      --gas-price fast
+      --environment-type development
+      --api-address 0.0.0.0:5001
+      --accept-disclaimer
+      --address '0xA9eaB11b4647dffb65738869483813ADA2611231'
       --password-file ./data/password.txt
       --web-ui
 
-  raiden_0x500213890eb94a8478abc43d21999a244af81644: 
+  raiden_0x360a7b1674c3a13db50e87496763d64db55ae37a:
     build:
-      context: . 
-      dockerfile: ./Dockerfile 
-    volumes: 
-      - './data:/data' 
-    networks: 
-      raiden_net_0: 
-        ipv4_address: '172.0.144.6' 
-    command: 
-      --keystore-path ./data/keystore 
-      --network-id goerli 
-      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01 
-      --gas-price fast 
-      --environment-type development 
-      --api-address 0.0.0.0:5001 
-      --accept-disclaimer 
-      --address '0x500213890eB94a8478AbC43D21999a244aF81644' 
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - './data:/data'
+    networks:
+      raiden_net_0:
+        ipv4_address: '172.0.144.6'
+    command:
+      --keystore-path ./data/keystore
+      --network-id goerli
+      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
+      --gas-price fast
+      --environment-type development
+      --api-address 0.0.0.0:5001
+      --accept-disclaimer
+      --address '0x360a7b1674c3a13DB50E87496763D64DB55ae37a'
       --password-file ./data/password.txt
       --web-ui
 
-  raiden_0x22980e85063284a811c5c4b1403c5c729ca055a6: 
+  raiden_0xcc65027fe1cc806e13105ea60bebfdd59c89b562:
     build:
-      context: . 
-      dockerfile: ./Dockerfile 
-    volumes: 
-      - './data:/data' 
-    networks: 
-      raiden_net_0: 
-        ipv4_address: '172.0.144.7' 
-    command: 
-      --keystore-path ./data/keystore 
-      --network-id goerli 
-      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01 
-      --gas-price fast 
-      --environment-type development 
-      --api-address 0.0.0.0:5001 
-      --accept-disclaimer 
-      --address '0x22980E85063284A811C5c4b1403C5C729CA055a6' 
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - './data:/data'
+    networks:
+      raiden_net_0:
+        ipv4_address: '172.0.144.7'
+    command:
+      --keystore-path ./data/keystore
+      --network-id goerli
+      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
+      --gas-price fast
+      --environment-type development
+      --api-address 0.0.0.0:5001
+      --accept-disclaimer
+      --address '0xCc65027fe1cC806e13105eA60BeBfDd59c89b562'
       --password-file ./data/password.txt
       --web-ui
 
-  raiden_0x6f62d52d03131008b2f67562a7016709e8d9cb9f: 
+  raiden_0x3a38c2c8a988d9e3ba088bb07ebdd23abd15179e:
     build:
-      context: . 
-      dockerfile: ./Dockerfile 
-    volumes: 
-      - './data:/data' 
-    networks: 
-      raiden_net_0: 
-        ipv4_address: '172.0.144.8' 
-    command: 
-      --keystore-path ./data/keystore 
-      --network-id goerli 
-      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01 
-      --gas-price fast 
-      --environment-type development 
-      --api-address 0.0.0.0:5001 
-      --accept-disclaimer 
-      --address '0x6F62D52d03131008b2F67562a7016709E8d9cb9f' 
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - './data:/data'
+    networks:
+      raiden_net_0:
+        ipv4_address: '172.0.144.8'
+    command:
+      --keystore-path ./data/keystore
+      --network-id goerli
+      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
+      --gas-price fast
+      --environment-type development
+      --api-address 0.0.0.0:5001
+      --accept-disclaimer
+      --address '0x3a38C2C8A988d9e3Ba088bB07ebdD23aBD15179e'
       --password-file ./data/password.txt
       --web-ui
 
-  raiden_0x017c0634d3141598da9a092c623290fb46370c63: 
+  raiden_0xfa400ad8627570419ac099aba029d028f0629ba7:
     build:
-      context: . 
-      dockerfile: ./Dockerfile 
-    volumes: 
-      - './data:/data' 
-    networks: 
-      raiden_net_0: 
-        ipv4_address: '172.0.144.9' 
-    command: 
-      --keystore-path ./data/keystore 
-      --network-id goerli 
-      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01 
-      --gas-price fast 
-      --environment-type development 
-      --api-address 0.0.0.0:5001 
-      --accept-disclaimer 
-      --address '0x017c0634d3141598dA9a092C623290Fb46370C63' 
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - './data:/data'
+    networks:
+      raiden_net_0:
+        ipv4_address: '172.0.144.9'
+    command:
+      --keystore-path ./data/keystore
+      --network-id goerli
+      --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
+      --gas-price fast
+      --environment-type development
+      --api-address 0.0.0.0:5001
+      --accept-disclaimer
+      --address '0xFA400ad8627570419Ac099AbA029D028f0629bA7'
       --password-file ./data/password.txt
       --web-ui
-

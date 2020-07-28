@@ -121,7 +121,6 @@ start server
 */
 app.listen(serverport, () => {
     console.log(addr + ` listening on port ${serverport}`);
-    startRaidenClient();
 });
 
 //write matches in smart contract and deploy on blockchain
@@ -173,6 +172,7 @@ async function getHouseholds(){
     let consumer = [];
     let households = [];
     let contains = [];
+    let messages =[]
     let actDate = new Date();
 
     for(let i = payments.data.length - 1; i >= 0; i--){
@@ -183,6 +183,7 @@ async function getHouseholds(){
 	        let id = payments.data[i].initiator;
 	        let balance = payments.data[i].identifier;
 	        if(!contains.includes(id)){
+            messages.push(payments[i]);
 		          contains.push(id);
 		          households.push({id, balance});
 		          if(balance[0] == '2'){
@@ -197,6 +198,7 @@ async function getHouseholds(){
     }
 
     let res = [prosumer, consumer];
+    endDate = new Date();
     console.log(res);
     return res;
 };
@@ -236,25 +238,24 @@ async function matchHouseholds(households){
   get all payments in the last 5 minutes
 */
 async function hashPayments(){
-  let actDate = new Date();
   let web3 = new Web3();
   let accounts = [];
   let hashes = [];
+  let messages = [];
+  let actDate = new Date();
   let payments = await axios.get(api + "payments/" + tkn);
-  console.log(payments.data)
+  payments = payments.data.reverse();
 
-  for(payment of payments.data){
-    //if(accounts.includes(payment.initiator)){
-  //    continue;
-  //  }
-    accounts.push(payment.initiator);
+  for(payment of payments){
+    if(accounts.includes(payment.initiator) | payment.event != "EventPaymentReceivedSuccess"){
+      continue;
+    }
     let paymentDate = new Date(payment.log_time);
-    console.log("actual: ",actDate)
-    console.log("payment: ",paymentDate)
-
-    if((actDate - paymentDate)/60000 >= 7000){
+    if((actDate - paymentDate)/60000 >= 5){
        break;
     }else{
+      accounts.push(payment.initiator);
+      messages.push(payment)
       let channelObject = await axios.get(api + "channels/" + tkn + "/" + payment.initiator);
       //create object that has to be hashed
       let object = {"target": addr, "initiator": payment.initiator, "identifier": payment.identifier, "hashed_identifier": web3.utils.sha3(payment.identifier), "token_address": tkn, "amount": payment.amount, "channel_identifier": channelObject.data.channel_identifier};
@@ -262,12 +263,17 @@ async function hashPayments(){
       hashes.push({"address": payment.initiator, "hash": hash});
     }
   }
-
-  axios.post("http://localhost:9000/postHashes", {"hashes": hashes}).then(
-    response => {
-      console.log(response.data)
-    }
-  ).catch(err => {console.log(err)});
+  let afterDate = new Date();
+  console.log("Anzahl der accounts: ", accounts.length, " größe der Historie: ", payments.length, " hashzeit: ", (afterDate - actDate)/1000, " Sekunden")
+  fs.appendFileSync('./hash_zeit.csv', accounts.length + "," + payments.length + "," + (afterDate - actDate)/1000 + " Sekunden" + '\n');
+  /*
+  axios.post("http://localhost:9000/postHashes", {"hashes": hashes})
+    .then(response => {console.log(response.data)})
+    .catch(err => {console.log(err)});
+  */
+  axios.post("http://localhost:9000/postMessages", {"messages": messages})
+    .then(response => {console.log(response.data)})
+    .catch(err => {console.log(err)});
 }
 
 /*
@@ -275,7 +281,7 @@ async function hashPayments(){
 */
 async function checkTokenNetwork(){
     try {
-      x = await axios.get(api + "connections", {timeout: 500});
+      x = await axios.get(api + "connections", {timeout: 1000});
       if(!x.data.hasOwnProperty(tkn)){
         mintAndJoinToken();
       }else{
@@ -312,19 +318,16 @@ function mintAndJoinToken(){
   join the tokennetwork
 */
 function joinTokennetwork(){
-      let connect = api + "connections/" + tkn;
-      let data = {
-  	     "funds":4500
-      };
-
-      axios.put(connect, data).then(
-  	    response => {
-
-  		      console.log(response, "Netting Server joined tokennetwork");
-  	    }
-  	).catch(err => {
+  let connect = api + "connections/" + tkn;
+  let data = {
+  	"funds":4500
+  };
+  axios.put(connect, data)
+    .then(response => {console.log(response, "Netting Server joined tokennetwork");})
+    .catch(err => {
       console.log(err);
-      console.log("Netting Server: join tokennetwork failed")});
+      console.log("Netting Server: join tokennetwork failed")
+    });
 }
 
 async function startRaidenClient(){
@@ -340,13 +343,38 @@ checks if 15 minutes are over to receive and match the households every
 */
 cron.schedule('* * * * *', () => {
     let minutes = [1, 16, 31, 46]
+    let checks = [5, 20, 35, 50];
     let date = new Date();
     console.log(date.getMinutes());
     if(minutes.includes(date.getMinutes())){
 	     console.log("matching phase");
 	     hashPayments();
     }
+    if(checks.includes(date.getMinutes())){
+			console.log("checking phase");
+			checkRaidenClient();
+		}
 });
+
+/*
+	checks if an Raiden client is offline
+	if so then start the specific networks
+*/
+async function checkRaidenClient(){
+  try {
+    response = await axios.get(api + "status", {timeout: 500});
+    if(response.status == 200 && response.data.status == "ready"){
+      return;
+    }else if(response.status == 200 && response.data.status == "unavailable" ){
+      return;
+    }else{
+      startRaidenClient();
+    }
+  } catch (e) {
+    startRaidenClient();
+  }
+
+}
 
 
 
