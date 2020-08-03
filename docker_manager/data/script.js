@@ -4,14 +4,15 @@ $(document).ready ( function(){
    console.log("jquery loaded");
    getAccounts();
    getStatusNetting();
-   //getAddresses();
+   getStatusAccounts();
+   getStatusChannel();
 });
 
 var countAccounts = 0;
 
 //update every 10 sec.
 //var checkAccounts = window.setInterval(getAccounts, 10000);
-var checkAccounts = window.setInterval(getStatusChannel, 5000);
+var checkAccounts = window.setInterval(getStatusChannel, 150000);
 var checkAccounts = window.setInterval(getStatusNetting, 30000);
 
 /*
@@ -21,29 +22,31 @@ build all accounts in HTML
 function getAccounts(){
       $.ajax({
           type: 'GET',
-          url: 'http://localhost:9000/getCheckedAccounts',
+          url: 'http://localhost:9000/getAllAccounts',
           data: { get_param: 'value' },
           success: function (data) {
-              let accounts = data;
-              console.log(data)
-              var res = document.createElement("div");
-              let counter = countNetwork(accounts);
-              for(let i = 0; i < counter; i++){
-                var div = document.createElement("div");
-                div.class = "network";
-                let h1 = document.createElement("h1");
-                h1.innerHTML = "Netzwerk" + (i+1) + " <button type='button' onclick='startServices(" + i + ")'>Netzwerk neustart</button>";
+              let accounts = data.accounts;
+              let networkCount = data.networkCount;
+              console.log(accounts, networkCount)
 
-                div.appendChild(h1);
+              //remove all in main
+              var main = document.getElementById("networks");
+              main.innerHTML = "";
+
+              for(let networkID = 0; networkID < networkCount; networkID++){
+                //create Network
+                var network = document.createElement("div");
+                network.className = "network";
+                let h1 = document.createElement("h1");
+                h1.innerHTML = "Netzwerk" + (networkID+1) + " <button type='button' onclick='startServices(" + networkID + ")'>Netzwerk neustart</button>";
+                network.appendChild(h1);
 
                 var table = document.createElement("table")
-                table.width = "100%";
-                table.border = "1";
+                table.className = "w3-table-all w3-large";
                 for(account of accounts){
-                  let networkid = account.api[11];
-                  if(account.networkid == i){
+                  if(account.networkID == networkID){
                     var tr = document.createElement("tr");
-                    tr.class = "account";
+                    tr.className = "account";
 
                     let th1 = document.createElement("th");
                     let th2 = document.createElement("th");
@@ -53,17 +56,22 @@ function getAccounts(){
                     let link = document.createElement("a")
 
                     //get link to web ui
-                    let index = account.api.indexOf("/", 12)
+                    let index = account.api.indexOf("/", 12);
                     let linkStr = account.api.substring(0, index);
-                    link.href = linkStr
-                    link.innerHTML = account.address
-
+                    link.href = linkStr;
+                    link.innerHTML = account.address;
                     th1.appendChild(link);
-                    th2.innerHTML = account.status;
 
-                    //set status channel
-                    th3.id = "status_channel_" + account.address
-                    th3.innerHTML = account.statusChannel;
+                    //create and set status channel with an id
+                    //load gif
+                    var img = new Image(20,20);
+                    img.src = "load.gif";
+
+                    th2.id = "status_" + account.address;
+                    th2.appendChild(img);
+
+                    th3.id = "status_channel_" + account.address;
+
 
                     //create buttons
                     let string = "openChannel(" + account.address + ")"
@@ -78,13 +86,10 @@ function getAccounts(){
 
                     table.appendChild(tr);
                   }
+                  network.appendChild(table);
                 }
-                div.appendChild(table);
-                res.appendChild(div);
+                main.appendChild(network);
               }
-
-              document.getElementById("networks").innerHTML = "";
-              document.getElementById("networks").appendChild(res);
           }
 
 
@@ -93,10 +98,20 @@ function getAccounts(){
 }
 
 function getStatusNetting(){
-  console.log("hallo")
   $.ajax({
       type: 'GET',
       url: 'http://localhost:8000/getStatusNetting',
+      data: { get_param: 'value' },
+      success: function (data) {
+        document.getElementById("status_netting").innerHTML = data.status;
+      }
+  });
+}
+
+function getStatusAccounts(){
+  $.ajax({
+      type: 'GET',
+      url: 'http://localhost:9000/getStatus',
       data: { get_param: 'value' },
       success: function (data) {
         document.getElementById("status_netting").innerHTML = data.status;
@@ -111,7 +126,7 @@ function getStatusChannel(){
       data: { get_param: 'value' },
       success: function (data) {
         for(account of data){
-          let id = "status_channel_" + account.address
+          let id = "status_channel_"
           try{
             document.getElementById(id).innerHTML = account.status;
           }catch(e){
@@ -135,15 +150,15 @@ function closeChannel(addr){
 /*
 post start specific network
 */
-async function startServices(networkid){
-  $.post("http://localhost:9000/startServices", {"networkid": networkid});
+async function startServices(networkID){
+  $.post("http://localhost:9000/startServices", {"networkID": networkID});
 }
 
 /*
 post stop specific network
 */
-async function stopServices(networkid){
-  $.post("http://localhost:9000/stopServices", {"networkid": networkid});
+async function stopServices(networkID){
+  $.post("http://localhost:9000/stopServices", {"networkID": networkID});
 }
 
 /*
@@ -165,8 +180,8 @@ async function removeNetwork(){
 function countNetwork(accounts){
   let count = 0
   for(account of accounts){
-    if(account.networkid > count){
-      count = account.networkid;
+    if(account.networkID > count){
+      count = account.networkID;
     }
   }
   return count + 1

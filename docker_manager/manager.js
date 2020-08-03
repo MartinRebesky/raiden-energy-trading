@@ -113,7 +113,7 @@ function getPrivKey(password){
 }
 
 /*running a function every minute
-  checks if 15 minutes are over to send every 0, 15, 30, 45 minutes*/
+  checks if 15 minutes are over to send every 0, 15, 30, 45 minutes*//*
 cron.schedule('* * * * *', () => {
     let sends = [0, 15, 30, 45];
 		let scenario = [3, 18, 33, 48];
@@ -249,11 +249,11 @@ function getSmartMeterData(){
 	let kwh = 0;
 	for(account of accounts){
 		if(count % 5 == 0){
-			res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "kwh": "1" + Math.round(kwh*(-1.5))})
+			res.push({"address": account.address, "api": account.api, "networkID": account.networkID, "kwh": "1" + Math.round(kwh*(-1.5))})
 		}else{
 			accountKwh = Math.floor((Math.random() * 100) + 1);
 			kwh -= accountKwh;
-			res.push({"address": account.address, "api": account.api, "networkid": account.networkid, "kwh": "2" + Math.round(accountKwh)})
+			res.push({"address": account.address, "api": account.api, "networkID": account.networkID, "kwh": "2" + Math.round(accountKwh)})
 		}
 		count++;
 	}
@@ -261,14 +261,14 @@ function getSmartMeterData(){
 }
 
 /*
-returns array with all accounts with address, api and networkid
+returns array with all accounts with address, api and networkID
 */
 function getAllAccounts(){
   var res = [];
   networkcount = countNetwork();
 
   let addresses = [];
-  //iterate over all networkids
+  //iterate over all networkIDs
   for(let i = 0; i < networkcount; i++){
     let keyfiles = fs.readdirSync("./network" + i + "/data/keystore")
     let addresses = [];
@@ -278,7 +278,7 @@ function getAllAccounts(){
       addresses.push(checksummed(json.address));
     }
 
-    //get api for all addresses of the network with networkid = i
+    //get api for all addresses of the network with networkID = i
     let doc = yaml.safeLoad(fs.readFileSync("./network" + i + "/docker-compose.yml", "utf8"));
     for(address of addresses){
       let ymlvalue = doc.services["raiden_" + address.toLowerCase()];
@@ -296,7 +296,7 @@ function getAllAccounts(){
         }
       }
       let api = "http://" + ip + ":" + port + "/api/v1/";
-      res.push({"address": address, "api": api, "networkid": i});
+      res.push({"address": address, "api": api, "networkID": i});
     }
   }
   return res;
@@ -309,6 +309,9 @@ function addNetwork(n){
 
   unused = fs.readdirSync("./unused");
   for(network of unused){
+		if(!network.includes("network")){
+			continue;
+		}
     if(n <= 0){
       break;
     }
@@ -618,7 +621,7 @@ async function getCheckedAccounts(){
 	let allStatusTokennetwork = await getStatusTokennetwork();
 	let res = [];
 	for(i in allStatus){
-		res.push({"address": allStatus[i].address, "api":  allAccounts[i].api,"status": allStatus[i].status, "statusChannel": allStatusChannels[i].status, "statusTokennetwork": allStatusTokennetwork[i].status, "networkid": allAccounts[i].networkid});
+		res.push({"address": allStatus[i].address, "api":  allAccounts[i].api,"status": allStatus[i].status, "statusChannel": allStatusChannels[i].status, "statusTokennetwork": allStatusTokennetwork[i].status, "networkID": allAccounts[i].networkID});
 	}
 	return res;
 }
@@ -632,8 +635,8 @@ async function checkRaidenClients(){
 	let networks = [];
 	for(account of accounts){
 		if(account.status != "online"){
-			if(!networks.includes(account.networkid)){
-				networks.push(account.networkid)
+			if(!networks.includes(account.networkID)){
+				networks.push(account.networkID)
 			}
 		}
 	}
@@ -699,15 +702,15 @@ function countNetwork(){
 }
 
 /*
-starts the specific raiden network with networkid
-if networkid = -1 starts all raiden networks
+starts the specific raiden network with networkID
+if networkID = -1 starts all raiden networks
 */
-async function startRaidennetwork(networkid){
+async function startRaidennetwork(networkID){
   counter = countNetwork();
-  if(networkid != -1  && networkid < counter){
-    await child_process.execSync("cd network" + networkid + "; docker-compose down");
-    child_process.exec("gnome-terminal --title='network'" + networkid + " -x sh -c 'cd network" + networkid + "; docker-compose up'");
-  }else if(networkid == -1){
+  if(networkID != -1  && networkID < counter){
+    await child_process.execSync("cd network" + networkID + "; docker-compose down");
+    child_process.exec("gnome-terminal --title='network'" + networkID + " -x sh -c 'cd network" + networkID + "; docker-compose up'");
+  }else if(networkID == -1){
     for(let i = 0; i < counter; i++){
       startRaidennetwork(i);
     }
@@ -715,14 +718,14 @@ async function startRaidennetwork(networkid){
 }
 
 /*
-stops the specific raiden network with networkid
-if networkid = -1 stops all raiden networks
+stops the specific raiden network with networkID
+if networkID = -1 stops all raiden networks
 */
-async function stopRaidenNetwork(networkid){
+async function stopRaidenNetwork(networkID){
   counter = countNetwork();
-  if(networkid != -1  && networkid < counter){
-    child_process.exec("cd network" + networkid + "; docker-compose down");
-  }else if(networkid == -1){
+  if(networkID != -1  && networkID < counter){
+    child_process.exec("cd network" + networkID + "; docker-compose down");
+  }else if(networkID == -1){
     for(let i = 0; i < counter; i++){
       stopRaidenNetwork(i);
     }
@@ -824,6 +827,22 @@ app.get("/getCheckedAccounts", async function (req, res) {
   res.send(checkedAccounts);
 });
 
+app.get("/getAllAccounts", async function (req, res) {
+  let accounts = await getAllAccounts();
+	let networkCount = countNetwork();
+  res.send({"accounts": accounts, "networkCount": networkCount});
+});
+
+app.get("/getStatusChannel", async function (req, res) {
+  let status = await getStatusChannel();
+  res.send(status);
+});
+
+app.get("/getStatus", async function (req, res) {
+  let status = await getStatus();
+  res.send(status);
+});
+
 app.get("/getAddresses", async function (req, res) {
   let checkedAccounts = await checkOnline();
 	var addresses = [];
@@ -837,15 +856,15 @@ app.get("/getAddresses", async function (req, res) {
 });
 
 app.post("/startServices", function (req, res){
-  let networkid = req.body.networkid
-  startRaidennetwork(networkid);
+  let networkID = req.body.networkID
+  startRaidennetwork(networkID);
   res.send("ok")
 });
 
 app.post("/stopServices", function (req, res){
-  let networkid = req.body.networkid;
+  let networkID = req.body.networkID;
   console.log("stop")
-  stopRaidenNetwork(networkid);
+  stopRaidenNetwork(networkID);
   res.send("ok")
 });
 
@@ -855,11 +874,6 @@ app.post("/hash", async function(req, res){
 	let checked = await checkHash(address, body);
 	console.log(checked);
 	res.send(checked)
-});
-
-app.get("/getStatusChannel", async function (req, res) {
-  let status = await getStatusChannel();
-  res.send(status);
 });
 
 app.post("/addNetwork", function (req, res){

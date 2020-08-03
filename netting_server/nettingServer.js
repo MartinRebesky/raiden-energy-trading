@@ -121,6 +121,7 @@ start server
 */
 app.listen(serverport, () => {
     console.log(addr + ` listening on port ${serverport}`);
+    startRaidenClient();
 });
 
 //write matches in smart contract and deploy on blockchain
