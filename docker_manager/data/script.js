@@ -11,9 +11,10 @@ $(document).ready ( function(){
 var countAccounts = 0;
 
 //update every 10 sec.
-//var checkAccounts = window.setInterval(getAccounts, 10000);
-var checkAccounts = window.setInterval(getStatusChannel, 150000);
-var checkAccounts = window.setInterval(getStatusNetting, 30000);
+var checkStatusNetting = window.setInterval(getStatusNetting, 15000);
+var checkstatus = window.setInterval(getStatusAccounts, 15000);
+var checkStatusChannel = window.setInterval(getStatusChannel, 15000);
+
 
 /*
 load all accounts in DOM
@@ -25,9 +26,7 @@ function getAccounts(){
           url: 'http://localhost:9000/getAllAccounts',
           data: { get_param: 'value' },
           success: function (data) {
-              let accounts = data.accounts;
               let networkCount = data.networkCount;
-              console.log(accounts, networkCount)
 
               //remove all in main
               var main = document.getElementById("networks");
@@ -43,49 +42,48 @@ function getAccounts(){
 
                 var table = document.createElement("table")
                 table.className = "w3-table-all w3-large";
+                let accounts = data.accounts.filter(acc => acc.networkID == networkID);
                 for(account of accounts){
-                  if(account.networkID == networkID){
-                    var tr = document.createElement("tr");
-                    tr.className = "account";
+                  var tr = document.createElement("tr");
+                  tr.className = "account";
 
-                    let th1 = document.createElement("th");
-                    let th2 = document.createElement("th");
-                    let th3 = document.createElement("th");
-                    let th4 = document.createElement("th");
-                    let th5 = document.createElement("th");
-                    let link = document.createElement("a")
+                  let th1 = document.createElement("th");
+                  let th2 = document.createElement("th");
+                  let th3 = document.createElement("th");
+                  let th4 = document.createElement("th");
+                  let th5 = document.createElement("th");
+                  let link = document.createElement("a")
 
-                    //get link to web ui
-                    let index = account.api.indexOf("/", 12);
-                    let linkStr = account.api.substring(0, index);
-                    link.href = linkStr;
-                    link.innerHTML = account.address;
-                    th1.appendChild(link);
+                  //get link to web ui
+                  let index = account.api.indexOf("/", 12);
+                  let linkStr = account.api.substring(0, index);
+                  link.href = linkStr;
+                  link.innerHTML = account.address;
+                  th1.id = account.address;
+                  th1.appendChild(link);
 
-                    //create and set status channel with an id
-                    //load gif
-                    var img = new Image(20,20);
-                    img.src = "load.gif";
+                  //create and set status channel with an id
+                  //load gif
+                  var img = new Image(20,20);
+                  img.src = "load.gif";
 
-                    th2.id = "status_" + account.address;
-                    th2.appendChild(img);
+                  th2.id = "status_" + account.address;
+                  th2.appendChild(img);
 
-                    th3.id = "status_channel_" + account.address;
+                  th3.id = "status_channel_" + account.address;
 
+                  //create buttons
+                  let string = "openChannel(" + account.address + ")"
+                  th4.innerHTML = " <button type='button' onclick='openChannel(\"" + account.address + "\")'>Channel öffnen</button>";
+                  th5.innerHTML = " <button type='button' onclick='closeChannel(\"" + account.address + "\")'>Channel schließen</button>";
 
-                    //create buttons
-                    let string = "openChannel(" + account.address + ")"
-                    th4.innerHTML = " <button type='button' onclick='openChannel(\"" + account.address + "\")'>Channel öffnen</button>";
-                    th5.innerHTML = " <button type='button' onclick='closeChannel(\"" + account.address + "\")'>Channel schließen</button>";
+                  tr.appendChild(th1);
+                  tr.appendChild(th2);
+                  tr.appendChild(th3);
+                  tr.appendChild(th4);
+                  tr.appendChild(th5);
 
-                    tr.appendChild(th1);
-                    tr.appendChild(th2);
-                    tr.appendChild(th3);
-                    tr.appendChild(th4);
-                    tr.appendChild(th5);
-
-                    table.appendChild(tr);
-                  }
+                  table.appendChild(tr);
                   network.appendChild(table);
                 }
                 main.appendChild(network);
@@ -114,7 +112,15 @@ function getStatusAccounts(){
       url: 'http://localhost:9000/getStatus',
       data: { get_param: 'value' },
       success: function (data) {
-        document.getElementById("status_netting").innerHTML = data.status;
+        console.log(data)
+        for(account of data){
+          let id = "status_" + account.address;
+          try{
+            document.getElementById(id).innerHTML = account.status;
+          }catch(e){
+
+          }
+        }
       }
   });
 }
@@ -126,7 +132,7 @@ function getStatusChannel(){
       data: { get_param: 'value' },
       success: function (data) {
         for(account of data){
-          let id = "status_channel_"
+          let id = "status_channel_" + account.address;
           try{
             document.getElementById(id).innerHTML = account.status;
           }catch(e){
@@ -166,7 +172,8 @@ post add n networks
 */
 async function addNetwork(){
   let n = document.getElementById("n").value;
-  $.post("http://localhost:9000/addNetwork", {"n": n});
+  await $.post("http://localhost:9000/addNetwork", {"n": n});
+  getAccounts();
 }
 
 /*
@@ -174,7 +181,8 @@ post remove n networks
 */
 async function removeNetwork(){
   let n = document.getElementById("n").value;
-  $.post("http://localhost:9000/removeNetwork", {"n": n});
+  await $.post("http://localhost:9000/removeNetwork", {"n": n});
+  getAccounts();
 }
 
 function countNetwork(accounts){
