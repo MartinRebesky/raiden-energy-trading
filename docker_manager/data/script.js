@@ -144,8 +144,15 @@ function getStatusChannel(){
   });
 }
 
+function sendMeterData(addr){
+  $.post("http://localhost:9000/sendMeterData", {"addr": "" + addr});
+}
+
+function sendMeterDataAll(){
+  $.post("http://localhost:9000/sendMeterData", {"addr": -1});
+}
+
 function openChannel(addr){
-  console.log(addr);
   $.post("http://localhost:9000/openChannel", {"addr": "" + addr});
 }
 

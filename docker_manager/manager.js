@@ -854,6 +854,28 @@ app.get("/getStatus", async function (req, res) {
   res.send(status);
 });
 
+app.post("/openChannel", function(req, res){
+	let addr = req.body.addr;
+	openChannel(addr);
+});
+
+app.post("/closeChannel", function(req, res){
+	let addr = req.body.addr;
+	closeChannel(addr);
+});
+
+app.post("/sendMeterData", function(req, res){
+	let addr = req.body.addr;
+	let accounts = getAllAccounts.filter(acc => acc.address == addr);
+	sendMeterData(accounts[0]);
+});
+
+app.post("/closeChannel", function(req, res){
+	let addr = req.body.addr;
+	closeChannel(addr);
+});
+
+/*
 app.get("/getAddresses", async function (req, res) {
   let checkedAccounts = await checkOnline();
 	var addresses = [];
@@ -865,6 +887,7 @@ app.get("/getAddresses", async function (req, res) {
 	}
   res.send(await addresses);
 });
+*/
 
 app.post("/startServices", function (req, res){
   let networkID = req.body.networkID
@@ -925,15 +948,4 @@ app.post("/postMessages", async function (req, res){
 
 app.get("/hashes", function(req, res){
 	res.send(checkedHashes);
-});
-
-app.post("/openChannel", function(req, res){
-	console.log(req.body.addr)
-	let addr = req.body.addr;
-	openChannel(addr);
-});
-
-app.post("/closeChannel", function(req, res){
-	let addr = req.body.addr;
-	closeChannel(addr);
 });
