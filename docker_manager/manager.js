@@ -31,6 +31,7 @@ var durchgang = 0;
 
 
 const axios = require('axios');
+const CancelToken = require('axios').CancelToken;
 const bodyParser = require('body-parser');
 
 //const solc = require('solc');
@@ -478,7 +479,12 @@ async function checkTokenNetwork(account){
 		if(await web3.utils.fromWei( await web3.eth.getBalance(account.address)) < 0.005){
 			return;
 		}
-    x = await axios.get(account.api + "connections", {timeout: 1000});
+		//add canceltoken to throw an error if the raiden client is offline
+		let source = CancelToken.source();
+		setTimeout(() => {
+			source.cancel();
+		}, 1000);
+    x = await axios.get(account.api + "connections", {timeout: 500, cancelToken: source.token});
     if(!x.data.hasOwnProperty(tkn)){
       mintAndJoinToken(account);
     }else{
@@ -523,25 +529,6 @@ function joinTokennetwork(account){
 //tokennetwork requests end
 
 /*
-  checks if all used clients have an open payment channel with the netting server
-  @param open = boolean. if no open payment channel -> join or not (true, false)
-*/
-async function checkPaymentChannel(join){
-  let accounts = getAllAccounts();
-  for(account of accounts){
-    try {
-      response = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr);
-      console.log(response.data)
-    } catch (e) {
-      if(join && e.response.status == 404){
-
-      }
-    }
-
-  }
-}
-
-/*
   return and print all used accounts
 */
 function getUsedAccounts(){
@@ -558,60 +545,85 @@ function getUsedAccounts(){
 /*
   checks if all used raiden clients are online
 */
-async function getStatus(){
-  let accounts = getAllAccounts();
-  let status = [];
-  for(account of accounts){
+async function getStatus(account = -1){
+	if(account == -1){
+		let accounts = getAllAccounts();
+		let status = [];
+		for(account of accounts){
+			status.push(await getStatus(account));
+		}
+		return status;
+	}
     try {
-      response = await axios.get(account.api + "status", {timeout: 500});
+			//add canceltoken to throw an error if the raiden client is offline
+			let source = CancelToken.source();
+			setTimeout(() => {
+				source.cancel();
+			}, 400);
+      response = await axios.get(account.api + "status", {timeout: 200, cancelToken: source.token});
       if(response.status == 200 && response.data.status == "ready"){
-        status.push({"address": account.address, "status": "online"})
+        return {"address": account.address, "status": "online"}
       }else if(response.status == 200 && response.data.status == "unavailable" ){
-        status.push({"address": account.address, "status": "syncing"})
+        return {"address": account.address, "status": "syncing"}
       }else{
-        status.push({"address": account.address, "status": "offline"})
+        return {"address": account.address, "status": "offline"}
       }
     } catch (e) {
-      status.push({"address": account.address,  "status": "offline"})
+      return {"address": account.address,  "status": "offline"}
     }
-	}
-  return status;
 }
 
-async function getStatusChannel(){
-	let accounts = getAllAccounts();
-  let status = [];
-  for(account of accounts){
+async function getStatusChannel(account = -1){
+	if(account == -1){
+		let accounts = getAllAccounts();
+		let status = [];
+		for(account of accounts){
+			status.push(await getStatusChannel(account));
+		}
+		return status;
+	}
     try {
-      response = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 500});
+			//add canceltoken to throw an error if the raiden client is offline
+			let source = CancelToken.source();
+			setTimeout(() => {
+				source.cancel();
+			}, 400);
+      response = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 200, cancelToken: source.token});
       if(response.status == 200){
-        status.push({"address": account.address, "status": response.data.state, "balance": response.data.balance})
+        return {"address": account.address, "status": response.data.state, "balance": response.data.balance}
       }else{
-        status.push({"address": account.address, "status": "closed"})
+        return {"address": account.address,  "status": "closed"}
       }
     } catch (e) {
-      status.push({"address": account.address,  "status": "closed"})
+      return {"address": account.address,  "status": "closed"}
     }
-	}
-  return status;
+
 }
 
 async function getStatusTokennetwork(){
-	let accounts = getAllAccounts();
-  let status = [];
-  for(account of accounts){
+	if(account == -1){
+		let accounts = getAllAccounts();
+		let status = [];
+		for(account of accounts){
+			status.push(await getStatusTokennetwork(account));
+		}
+		return status;
+	}
     try {
-      response = await axios.get(account.api + "tokens/" + tkn, {timeout: 500});
+			//add canceltoken to throw an error if the raiden client is offline
+			let source = CancelToken.source();
+			setTimeout(() => {
+				source.cancel();
+			}, 400);
+      response = await axios.get(account.api + "tokens/" + tkn, {timeout: 200, cancelToken: source.token});
       if(response.status == 200){
-        status.push({"address": account.address, "status": "true"})
+        return {"address": account.address, "status": "true"};
       }else{
-        status.push({"address": account.address, "status": "false"})
+        return {"address": account.address, "status": "false"};
       }
     } catch (e) {
-      status.push({"address": account.address,  "status": "false"})
+      return {"address": account.address,  "status": "false"};
     }
-	}
-  return status;
 }
 
 async function getCheckedAccounts(){
@@ -818,7 +830,6 @@ app.use(express.static("data"));
 app.use(fileUpload());
 
 app.get('/', function (req,res) {
-  getAllAccounts();
   res.sendFile(__dirname + '/data/index.html');
 });
 
@@ -843,6 +854,32 @@ app.get("/getStatus", async function (req, res) {
   res.send(status);
 });
 
+app.post("/openChannel", function(req, res){
+	let addr = req.body.addr;
+	openChannel(addr);
+});
+
+app.post("/closeChannel", function(req, res){
+	let addr = req.body.addr;
+	closeChannel(addr);
+});
+
+app.post("/sendMeterData", function(req, res){
+	let addr = req.body.addr;
+	if(addr == -1){
+		sendMeterDataAll();
+	}else{
+		let accounts = getAllAccounts().filter(acc => acc.address == addr);
+		sendMeterData(accounts[0]);
+	}
+});
+
+app.post("/closeChannel", function(req, res){
+	let addr = req.body.addr;
+	closeChannel(addr);
+});
+
+/*
 app.get("/getAddresses", async function (req, res) {
   let checkedAccounts = await checkOnline();
 	var addresses = [];
@@ -854,6 +891,7 @@ app.get("/getAddresses", async function (req, res) {
 	}
   res.send(await addresses);
 });
+*/
 
 app.post("/startServices", function (req, res){
   let networkID = req.body.networkID
@@ -885,7 +923,7 @@ app.post("/addNetwork", function (req, res){
     addNetwork(n);
   }
 
-  res.send("ok")
+  res.redirect("/");
 });
 
 app.post("/removeNetwork", function (req, res){
@@ -896,7 +934,7 @@ app.post("/removeNetwork", function (req, res){
   console.log("remove " + n + " networks")
   removeNetwork(n);
   }
-  res.send("ok")
+  res.redirect("/");
 
 });
 
@@ -914,15 +952,4 @@ app.post("/postMessages", async function (req, res){
 
 app.get("/hashes", function(req, res){
 	res.send(checkedHashes);
-});
-
-app.post("/openChannel", function(req, res){
-	console.log(req.body.addr)
-	let addr = req.body.addr;
-	openChannel(addr);
-});
-
-app.post("/closeChannel", function(req, res){
-	let addr = req.body.addr;
-	closeChannel(addr);
 });

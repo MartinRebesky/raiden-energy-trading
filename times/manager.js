@@ -26,10 +26,6 @@ var durchgang = 0;
 
 const axios = require('axios').default;
 const CancelToken = require('axios').CancelToken;
-let source = CancelToken.source();
-setTimeout(() => {
-	source.cancel();
-}, 2000);
 
 const bodyParser = require('body-parser');
 

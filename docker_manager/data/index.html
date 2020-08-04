@@ -12,7 +12,8 @@
   Netting Server: <span id=status_netting display: inline>offline</span><br>
 
   <button type="button" name="start all clients" onclick="startServices(-1)">Alle Raiden Clients starten</button>
-  <button type="button" name="stop all clients" onclick="stopServices(-1)">Alle Raiden Clients stoppen</button><br>
+  <button type="button" name="stop all clients" onclick="stopServices(-1)">Alle Raiden Clients stoppen</button>
+  <button type="button" name="send Smart Meter Data" onclick="sendMeterDataAll()">Smart Meter Daten senden</button><br>
     <input type="number" id="n" name="quantity" min="1" max="20" required>
     <input type="submit" onclick="addNetwork()" value="hinzufügen">
     <input type="submit" onclick="removeNetwork()" value="löschen">
