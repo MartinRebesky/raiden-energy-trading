@@ -267,14 +267,17 @@ async function hashPayments(){
   let afterDate = new Date();
   console.log("Anzahl der accounts: ", accounts.length, " größe der Historie: ", payments.length, " hashzeit: ", (afterDate - actDate)/1000, " Sekunden")
   fs.appendFileSync('./hash_zeit.csv', accounts.length + "," + payments.length + "," + (afterDate - actDate)/1000 + " Sekunden" + '\n');
-  /*
   axios.post("http://localhost:9000/postHashes", {"hashes": hashes})
     .then(response => {console.log(response.data)})
     .catch(err => {console.log(err)});
-  */
+
+  return {"hashes": hashes, "messages": messages}
+
+  /*
   axios.post("http://localhost:9000/postMessages", {"messages": messages})
     .then(response => {console.log(response.data)})
     .catch(err => {console.log(err)});
+  */
 }
 
 /*
@@ -341,7 +344,7 @@ running a function every minute
 checks if 15 minutes are over to receive and match the households every
 1, 16, 31, 46 minutes
 1 minute after all households send the smart meter data
-*/
+*//*
 cron.schedule('* * * * *', () => {
     let minutes = [1, 16, 31, 46]
     let checks = [5, 20, 35, 50];
@@ -512,5 +515,9 @@ app.use(fileUpload());
 app.get('/getStatusNetting', async function (req,res) {
   status = await checkStatus();
   res.send(status)
+});
 
+app.get("/getMessages", async function (req, res){
+  let response = await hashPayments();
+  res.send({"messages": response.messages});
 });

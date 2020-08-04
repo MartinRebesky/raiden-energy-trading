@@ -714,14 +714,14 @@ function countNetwork(){
 }
 
 /*
-starts the specific raiden network with networkID
-if networkID = -1 starts all raiden networks
+starts the specific docker network with networkID
+if networkID = -1 starts all docker networks
 */
 async function startRaidennetwork(networkID){
   counter = countNetwork();
   if(networkID != -1  && networkID < counter){
-		await child_process.execSync("cd network" + networkid + "; docker-compose down");
-    child_process.exec("gnome-terminal --title='network'" + networkid + " -- bash -c 'cd network" + networkid + "; docker-compose up'");
+		await child_process.execSync("cd network" + networkID + "; docker-compose down");
+    child_process.exec("gnome-terminal --title='network'" + networkID + " -- bash -c 'cd network" + networkID + "; docker-compose up'");
   }else if(networkID == -1){
     for(let i = 0; i < counter; i++){
       startRaidennetwork(i);
@@ -730,8 +730,8 @@ async function startRaidennetwork(networkID){
 }
 
 /*
-stops the specific raiden network with networkID
-if networkID = -1 stops all raiden networks
+stops the specific docker network with networkID
+if networkID = -1 stops all docker networks
 */
 async function stopRaidenNetwork(networkID){
   counter = countNetwork();
@@ -839,6 +839,7 @@ app.get("/getCheckedAccounts", async function (req, res) {
 });
 
 app.get("/getAllAccounts", async function (req, res) {
+	console.log("hallo")
   let accounts = await getAllAccounts();
 	let networkCount = countNetwork();
   res.send({"accounts": accounts, "networkCount": networkCount});
@@ -866,12 +867,14 @@ app.post("/closeChannel", function(req, res){
 
 app.post("/sendMeterData", function(req, res){
 	let addr = req.body.addr;
+	console.log(addr)
 	if(addr == -1){
 		sendMeterDataAll();
 	}else{
 		let accounts = getAllAccounts().filter(acc => acc.address == addr);
 		sendMeterData(accounts[0]);
 	}
+	res.send("send all Smart Meter Data")
 });
 
 app.post("/closeChannel", function(req, res){
