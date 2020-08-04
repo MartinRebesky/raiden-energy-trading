@@ -52,6 +52,7 @@ function getAccounts(){
                   let th3 = document.createElement("th");
                   let th4 = document.createElement("th");
                   let th5 = document.createElement("th");
+                  let th6 = document.createElement("th");
                   let link = document.createElement("a")
 
                   //get link to web ui
@@ -72,16 +73,20 @@ function getAccounts(){
 
                   th3.id = "status_channel_" + account.address;
 
-                  //create buttons
+                  //create buttons to open and close the Payment Channel
                   let string = "openChannel(" + account.address + ")"
                   th4.innerHTML = " <button type='button' onclick='openChannel(\"" + account.address + "\")'>Channel öffnen</button>";
                   th5.innerHTML = " <button type='button' onclick='closeChannel(\"" + account.address + "\")'>Channel schließen</button>";
+
+                  //create button to send Smart Meter Data for an specific account
+                  th6.innerHTML = " <button type='button' onclick='sendMeterData(\"" + account.address + "\")'>Daten Senden</button>";
 
                   tr.appendChild(th1);
                   tr.appendChild(th2);
                   tr.appendChild(th3);
                   tr.appendChild(th4);
                   tr.appendChild(th5);
+                  tr.appendChild(th6);
 
                   table.appendChild(tr);
                   network.appendChild(table);

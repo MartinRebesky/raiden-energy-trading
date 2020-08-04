@@ -866,8 +866,12 @@ app.post("/closeChannel", function(req, res){
 
 app.post("/sendMeterData", function(req, res){
 	let addr = req.body.addr;
-	let accounts = getAllAccounts.filter(acc => acc.address == addr);
-	sendMeterData(accounts[0]);
+	if(addr == -1){
+		sendMeterDataAll();
+	}else{
+		let accounts = getAllAccounts().filter(acc => acc.address == addr);
+		sendMeterData(accounts[0]);
+	}
 });
 
 app.post("/closeChannel", function(req, res){

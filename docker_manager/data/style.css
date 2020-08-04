@@ -2,3 +2,16 @@ table, th, td {
   border: 1px solid black;
   border-collapse: collapse;
 }
+
+main{
+  width: 100%;
+}
+
+h1{
+  width: auto;
+}
+
+.network{
+  width: min-content;
+  margin: 0 auto;
+}
