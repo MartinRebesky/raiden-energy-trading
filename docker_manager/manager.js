@@ -10,14 +10,14 @@ const Transaction = require('ethereumjs-tx').Transaction;
 const child_process = require('child_process')
 //var accounts = require('./network/accounts.json');
 var EC = require('elliptic').ec;
-const { SHA3 } = require('sha3');
+//const { SHA3 } = require('sha3');
 
 
-const Wallet = require('ethereumjs-wallet')
+//const Wallet = require('ethereumjs-wallet')
 const createKeccakHash = require('keccak')
 const cron = require('node-cron');
 
-var $ = jQuery = require('jquery');
+//var $ = jQuery = require('jquery');
 
 var checkedHashes = [];
 var checkedTokennetwork = [];
@@ -33,7 +33,7 @@ var durchgang = 0;
 const axios = require('axios');
 const bodyParser = require('body-parser');
 
-const solc = require('solc');
+//const solc = require('solc');
 const keythereum = require("keythereum");
 const log = require('ololog').configure({ time: true });
 const ansi = require('ansicolor').nice
@@ -708,8 +708,8 @@ if networkID = -1 starts all raiden networks
 async function startRaidennetwork(networkID){
   counter = countNetwork();
   if(networkID != -1  && networkID < counter){
-    await child_process.execSync("cd network" + networkID + "; docker-compose down");
-    child_process.exec("gnome-terminal --title='network'" + networkID + " -x sh -c 'cd network" + networkID + "; docker-compose up'");
+		await child_process.execSync("cd network" + networkid + "; docker-compose down");
+    child_process.exec("gnome-terminal --title='network'" + networkid + " -- bash -c 'cd network" + networkid + "; docker-compose up'");
   }else if(networkID == -1){
     for(let i = 0; i < counter; i++){
       startRaidennetwork(i);
