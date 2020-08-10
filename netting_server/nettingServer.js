@@ -521,3 +521,8 @@ app.get("/getMessages", async function (req, res){
   let response = await hashPayments();
   res.send({"messages": response.messages});
 });
+
+app.post("/hashPayments", async function (req,res){
+  hashPayments();
+  res.send("hashed");
+});

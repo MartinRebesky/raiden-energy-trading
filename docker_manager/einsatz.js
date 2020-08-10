@@ -18,6 +18,27 @@ async function einsatz(index){
   checkMessages(messages);
 }
 
+async function hashTime(){
+  for(let i = 0; i < 4; i++){
+    for(let j = 0; j < 160; j++){
+      process.stdout.write(i + ", " + j + ": ");
+      await axios.post("http://localhost:9000/sendMeterData", {"addr": -1}).then(
+        response => {console.log(response.data)}
+      ).catch(
+        err => {console.log(err)}
+      );
+      wait(20000);
+    }
+    wait(120000);
+    await axios.post("http://localhost:8000/hashPayments").then(
+      response => console.log(response.data)
+    ).catch(
+      err => console.log(err)
+    );
+    wait(10000);
+  }
+}
+
 function wait(millisec){
   let startTime = new Date();
   let endTime = new Date();
@@ -66,4 +87,4 @@ async function einsatzsimulation(){
   await einsatz(50);
 }
 
-einsatzsimulation();
+hashTime();

@@ -225,7 +225,7 @@ send smart meter data to netting server
 async function sendMeterData(account){
 	try {
 		//check if an open channel with the netting server exists
-		let check = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 500});
+		let check = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 5000});
 		if(check.status == 200 && check.data.state == "opened"){
 			let req = account.api + 'payments/' + tkn + "/" + nettingAddr;
 		  let data = {
