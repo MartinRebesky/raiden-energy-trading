@@ -839,7 +839,6 @@ app.get("/getCheckedAccounts", async function (req, res) {
 });
 
 app.get("/getAllAccounts", async function (req, res) {
-	console.log("hallo")
   let accounts = await getAllAccounts();
 	let networkCount = countNetwork();
   res.send({"accounts": accounts, "networkCount": networkCount});

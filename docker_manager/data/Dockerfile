@@ -1,12 +1,3 @@
-# This will build the latest master
-#
-# we use an intermediate image to build this image. it will make the resulting
-# image a bit smaller.
-#
-# you can build the image with:
-#
-#   docker build . -t raiden
-
 FROM python:3.7 as builder
 
 # use --build-arg RAIDENVERSION=vraiden0.0.3 to build a specific (tagged) version

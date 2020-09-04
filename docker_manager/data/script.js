@@ -165,6 +165,10 @@ function closeChannel(addr){
   $.post("http://localhost:9000/closeChannel", {"addr": "" + addr});
 }
 
+function hashPayments(){
+  $.post("http://localhost:8000/hashPayments");
+}
+
 /*
 post start specific network
 */

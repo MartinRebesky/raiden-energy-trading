@@ -236,7 +236,7 @@ async function matchHouseholds(households){
 
 /*
   hashes every Payment received from each household
-  get all payments in the last 5 minutes
+  get all payments in the last 8 minutes
 */
 async function hashPayments(){
   let web3 = new Web3();
@@ -252,7 +252,7 @@ async function hashPayments(){
       continue;
     }
     let paymentDate = new Date(payment.log_time);
-    if((actDate - paymentDate)/60000 >= 5){
+    if((actDate - paymentDate)/60000 >= 8){
        break;
     }else{
       accounts.push(payment.initiator);

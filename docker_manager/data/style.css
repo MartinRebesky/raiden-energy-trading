@@ -3,6 +3,11 @@ table, th, td {
   border-collapse: collapse;
 }
 
+.manager{
+  width: 870px;
+  margin: 0 auto;
+}
+
 main{
   width: 100%;
 }
