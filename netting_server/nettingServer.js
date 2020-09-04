@@ -344,20 +344,15 @@ running a function every minute
 checks if 15 minutes are over to receive and match the households every
 1, 16, 31, 46 minutes
 1 minute after all households send the smart meter data
-*//*
+*/
 cron.schedule('* * * * *', () => {
     let minutes = [1, 16, 31, 46]
-    let checks = [5, 20, 35, 50];
     let date = new Date();
     console.log(date.getMinutes());
     if(minutes.includes(date.getMinutes())){
 	     console.log("matching phase");
 	     hashPayments();
     }
-    if(checks.includes(date.getMinutes())){
-			console.log("checking phase");
-			checkRaidenClient();
-		}
 });
 
 /*

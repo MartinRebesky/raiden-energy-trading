@@ -114,11 +114,9 @@ function getPrivKey(password){
 }
 
 /*running a function every minute
-  checks if 15 minutes are over to send every 0, 15, 30, 45 minutes*//*
+  checks if 15 minutes are over to send every 0, 15, 30, 45 minutes*/
 cron.schedule('* * * * *', () => {
     let sends = [0, 15, 30, 45];
-		let scenario = [3, 18, 33, 48];
-		let checks = [5, 20, 35, 50];
     let date = new Date();
     console.log(date.getMinutes());
     if(sends.includes(date.getMinutes())){
@@ -126,15 +124,6 @@ cron.schedule('* * * * *', () => {
 			 durchgang++;
 	     sendMeterDataAll();
     }
-		if(scenario.includes(date.getMinutes())){
-			console.log("einsatz phase");
-			einsatzszenario();
-		}
-		if(checks.includes(date.getMinutes())){
-			console.log("checking phase");
-			checkRaidenClients();
-		}
-
 
 });
 
