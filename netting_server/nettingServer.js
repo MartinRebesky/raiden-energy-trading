@@ -15,6 +15,7 @@ const Tx = require('ethereumjs-tx').Transaction;
 const keythereum = require("keythereum");
 const log = require('ololog').configure({ time: true });
 const ansi = require('ansicolor').nice
+const CancelToken = require('axios').CancelToken;
 
 const timezone = 2;
 
@@ -92,7 +93,8 @@ function getApi(){
 
   //get ip address
   let index = yml.indexOf("ipv4_address: '") + 15;
-  ip = "";
+  let ip = "localhost";
+  /*
   for(let i = index; i < yml.length; i++){
     if(yml[i] == "'"){
       break
@@ -100,6 +102,7 @@ function getApi(){
       ip += yml[i];
     }
   }
+  */
 
   //get port
   index = yml.indexOf("0.0.0.0:") + 8;
@@ -121,7 +124,7 @@ start server
 */
 app.listen(serverport, () => {
     console.log(addr + ` listening on port ${serverport}`);
-    startRaidenClient();
+    console.log(api);
 });
 
 //write matches in smart contract and deploy on blockchain
@@ -236,7 +239,7 @@ async function matchHouseholds(households){
 
 /*
   hashes every Payment received from each household
-  get all payments in the last 8 minutes
+  get all payments of the last 8 minutes
 */
 async function hashPayments(){
   let web3 = new Web3();
@@ -244,8 +247,24 @@ async function hashPayments(){
   let hashes = [];
   let messages = [];
   let actDate = new Date();
-  let payments = await axios.get(api + "payments/" + tkn);
-  payments = payments.data.reverse();
+  let payments = [];
+  try{
+    //add canceltoken to throw an error if the raiden client is offline
+    let source = CancelToken.source();
+    setTimeout(() => {
+      source.cancel();
+    }, 1000);
+    payments = await axios.get(api + "payments/" + tkn, {timeout: 500, cancelToken: source.token});
+    payments = payments.data.reverse();
+    console.log(payments);
+  }catch(e){
+    if(e.code == 'EHOSTUNREACH' || e.code == undefined){
+      console.log("Raiden Client unreachable");
+    }else{
+      console.log(e);
+    }
+
+  }
 
   for(payment of payments){
     if(accounts.includes(payment.initiator) | payment.event != "EventPaymentReceivedSuccess"){
@@ -266,18 +285,13 @@ async function hashPayments(){
   }
   let afterDate = new Date();
   console.log("Anzahl der accounts: ", accounts.length, " größe der Historie: ", payments.length, " hashzeit: ", (afterDate - actDate)/1000, " Sekunden")
+
   fs.appendFileSync('./hash_zeit.csv', accounts.length + "," + payments.length + "," + (afterDate - actDate)/1000 + " Sekunden" + '\n');
   axios.post("http://localhost:9000/postHashes", {"hashes": hashes})
-    .then(response => {console.log(response.data)})
+    .then(response => {console.log("hashes sent")})
     .catch(err => {console.log(err)});
 
   return {"hashes": hashes, "messages": messages}
-
-  /*
-  axios.post("http://localhost:9000/postMessages", {"messages": messages})
-    .then(response => {console.log(response.data)})
-    .catch(err => {console.log(err)});
-  */
 }
 
 /*

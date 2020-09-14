@@ -14,6 +14,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - './data:/data'
+    ports:
+      - "5001:5001"
     networks:
       raiden_net_0:
         ipv4_address: '172.0.144.5'
@@ -35,6 +37,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - './data:/data'
+    ports:
+      - "5002:5002"
     networks:
       raiden_net_0:
         ipv4_address: '172.0.144.6'
@@ -44,7 +48,7 @@ services:
       --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
       --gas-price fast
       --environment-type development
-      --api-address 0.0.0.0:5001
+      --api-address 0.0.0.0:5002
       --accept-disclaimer
       --address '0x360a7b1674c3a13DB50E87496763D64DB55ae37a'
       --password-file ./data/password.txt
@@ -56,6 +60,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - './data:/data'
+    ports:
+      - "5003:5003"
     networks:
       raiden_net_0:
         ipv4_address: '172.0.144.7'
@@ -65,7 +71,7 @@ services:
       --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
       --gas-price fast
       --environment-type development
-      --api-address 0.0.0.0:5001
+      --api-address 0.0.0.0:5003
       --accept-disclaimer
       --address '0xCc65027fe1cC806e13105eA60BeBfDd59c89b562'
       --password-file ./data/password.txt
@@ -77,6 +83,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - './data:/data'
+    ports:
+      - "5004:5004"
     networks:
       raiden_net_0:
         ipv4_address: '172.0.144.8'
@@ -86,7 +94,7 @@ services:
       --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
       --gas-price fast
       --environment-type development
-      --api-address 0.0.0.0:5001
+      --api-address 0.0.0.0:5004
       --accept-disclaimer
       --address '0x3a38C2C8A988d9e3Ba088bB07ebdD23aBD15179e'
       --password-file ./data/password.txt
@@ -98,6 +106,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - './data:/data'
+    ports:
+      - "5005:5005"
     networks:
       raiden_net_0:
         ipv4_address: '172.0.144.9'
@@ -107,7 +117,7 @@ services:
       --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
       --gas-price fast
       --environment-type development
-      --api-address 0.0.0.0:5001
+      --api-address 0.0.0.0:5005
       --accept-disclaimer
       --address '0xFA400ad8627570419Ac099AbA029D028f0629bA7'
       --password-file ./data/password.txt

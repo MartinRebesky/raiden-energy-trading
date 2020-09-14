@@ -8,6 +8,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - './data:/data'
+    ports:
+      - "5000:5000"
     networks:
       netting:
         ipv4_address: '172.144.0.16'
@@ -17,7 +19,7 @@ services:
       --eth-rpc-endpoint https://goerli.infura.io/v3/568d1aa1488f4d3ca4be7ba148703e01
       --gas-price fast
       --environment-type development
-      --api-address 0.0.0.0:5001
+      --api-address 0.0.0.0:5000
       --accept-disclaimer
       --address "0xF3457dADCF2E4F6fD2bBcfd2fAE3814e6A3cDBCd"
       --password-file ./data/password.txt

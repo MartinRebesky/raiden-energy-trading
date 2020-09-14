@@ -203,7 +203,7 @@ async function closeChannel(addr){
 				});
 		}
 	}catch(e){
-		console.log(account.address + " is offline or no open payment channel")
+		console.log(account.address + " didn't close")
 	}
 }
 
@@ -213,22 +213,28 @@ send smart meter data to netting server
 */
 async function sendMeterData(account){
 	try {
+		//add canceltoken to throw an error if the raiden client is offline
+		let source = CancelToken.source();
+		setTimeout(() => {
+			source.cancel();
+		}, 1000);
 		//check if an open channel with the netting server exists
-		let check = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 5000});
+		let check = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr, {timeout: 200, cancelToken: source.token});
+
 		if(check.status == 200 && check.data.state == "opened"){
 			let req = account.api + 'payments/' + tkn + "/" + nettingAddr;
 		  let data = {
 		  	"amount": "1",
 		  	"identifier": account.kwh
 		  };
-			console.log(req)
-			console.log(data)
+			console.log("POST:", req);
+			console.log(data , "\n");
 			axios.post(req, data)
 				.then(response => {console.log("response: ", response.data)})
 				.catch(err => {console.log(err.data)})
 		 }
 	}catch(err){
-		console.log(account.address + " is offline or has no open Payment Channel with the Netting Server")
+		console.log(account.address + " didn't send")
 	}
 }
 
@@ -273,7 +279,13 @@ function getAllAccounts(){
     for(address of addresses){
       let ymlvalue = doc.services["raiden_" + address.toLowerCase()];
       //get ip
-      let ip = ymlvalue.networks["raiden_net_" + i].ipv4_address;
+			let ip = "";
+			if(i <= 1){
+				ip = "localhost";
+			}else{
+				ip = ymlvalue.networks["raiden_net_" + i].ipv4_address;
+			}
+
 
       //get port
       let index = ymlvalue.command.indexOf("0.0.0.0:") + 8;
@@ -748,7 +760,8 @@ async function checkHashes(hashes){
 		}else{
 			try {
 				let payments = await axios.get(account.api + "payments/" + tkn + "/" + nettingAddr);
-				for(payment of payments.data){
+				payments = payments.data.reverse();
+				for(payment of payments){
 					if(payment.event == "EventPaymentSentSuccess"){
 						let channelObject = await axios.get(account.api + "channels/" + tkn + "/" + nettingAddr);
 			      //create object that has to be hashed
@@ -777,7 +790,7 @@ async function checkHashes(hashes){
 		}
 	}
 	timeEnd = new Date();
-	console.log("vom senden der smart meter Daten bis empfangen der Hashes hat es so lange gedauert: " + timeStart - timeEnd)
+	console.log(checkedHashes);
 }
 
 /*
