@@ -9,18 +9,28 @@ docker: 19.03.12
 docker-compose: 1.21.2
 
 to start the netting server
-
+```
 cd netting_server
+```
+```
 node nettingServer.js
+```
+```
 docker-compose up
+```
 
 to start the simulated households
 
 ```
 cd docker_manager
+```
+```
 node manager.js
 
 ```
-
+```
 cd network*
+```
+```
 docker-compose up
+```
