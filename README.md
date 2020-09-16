@@ -16,8 +16,11 @@ docker-compose up
 
 to start the simulated households
 
+```
 cd docker_manager
 node manager.js
+
+```
 
 cd network*
 docker-compose up
