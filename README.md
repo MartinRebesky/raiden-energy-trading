@@ -3,10 +3,12 @@ A protoype of a decentralized energy trading platform using the blockchain techn
 
 used versions:
 
+```
 node: 11.15.0
 npm : 6.7.0
 docker: 19.03.12
 docker-compose: 1.21.2
+```
 
 to start the netting server
 ```
