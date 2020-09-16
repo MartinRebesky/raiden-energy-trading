@@ -11,11 +11,7 @@ docker-compose: 1.21.2
 to start the netting server
 ```
 cd netting_server
-```
-```
 node nettingServer.js
-```
-```
 docker-compose up
 ```
 
