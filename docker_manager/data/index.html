@@ -12,15 +12,15 @@
   <div class="manager">
     <table id="netting">
       <tr>
-        <th> <a href="http://172.144.0.16:5001">Netting Server</a></th>
+        <th> <a href="http://localhost:5000">Netting Server</a></th>
         <th> <span id=status_netting display: inline></span> </th>
+        <th> <button type="button" name="send Smart Meter Data" onclick="sendMeterDataAll()">Smart Meter Daten senden</button><th>
         <th> <button onclick="hashPayments()"> Nachrichten hashen </button> </th>
       </tr>
     </table>
 
   <button type="button" name="start all clients" onclick="startServices(-1)">Docker Netzwerke starten</button>
-  <button type="button" name="stop all clients" onclick="stopServices(-1)">Docker Netzwerke stoppen</button>
-  <button type="button" name="send Smart Meter Data" onclick="sendMeterDataAll()">Smart Meter Daten senden</button><br>
+  <button type="button" name="stop all clients" onclick="stopServices(-1)">Docker Netzwerke stoppen</button><br>
     <input type="number" id="n" name="quantity" min="1" max="20" required>
     <input type="submit" onclick="addNetwork()" value="hinzufügen">
     <input type="submit" onclick="removeNetwork()" value="löschen">

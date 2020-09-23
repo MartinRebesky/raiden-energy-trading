@@ -6,6 +6,10 @@ table, th, td {
 .manager{
   width: 870px;
   margin: 0 auto;
+  text-align: center;
+}
+#netting{
+  margin: 0 auto; 
 }
 
 main{

@@ -1,3 +1,5 @@
+const timezone = 2;
+
 const express = require('express');
 const app = express();
 const fileUpload = require("express-fileupload")
@@ -16,8 +18,6 @@ const keythereum = require("keythereum");
 const log = require('ololog').configure({ time: true });
 const ansi = require('ansicolor').nice
 const CancelToken = require('axios').CancelToken;
-
-const timezone = 2;
 
 require('dotenv').config()
 
@@ -124,9 +124,9 @@ start server
 */
 app.listen(serverport, () => {
     console.log(addr + ` listening on port ${serverport}`);
-    console.log(api);
 });
 
+/*
 //write matches in smart contract and deploy on blockchain
 async function deployMatches(){
   //let matches = await matchHouseholds(await getHouseholds());
@@ -166,77 +166,6 @@ async function deployMatches(){
 
 };
 
-/*get all households that sends data in the last 10 minutes
-  every household is only contained once
-  return households[] with [0] = prosumer[](id,balance) and [1] = consumer[](id,balance)*/
-async function getHouseholds(){
-
-    let payments = await axios.get(api + "payments/" + tkn);
-    let prosumer = [];
-    let consumer = [];
-    let households = [];
-    let contains = [];
-    let messages =[]
-    let actDate = new Date();
-
-    for(let i = payments.data.length - 1; i >= 0; i--){
-	     let paymentDate = new Date(payments.data[i].log_time);
-	     if((actDate - paymentDate)/60000 >= 7000){
-	        break;
-	     }else{
-	        let id = payments.data[i].initiator;
-	        let balance = payments.data[i].identifier;
-	        if(!contains.includes(id)){
-            messages.push(payments[i]);
-		          contains.push(id);
-		          households.push({id, balance});
-		          if(balance[0] == '2'){
-		              consumer.push({id, "balance":
-		              parseInt(balance.substring(1))});
-		          }else{
-		              prosumer.push({id, "balance":
-		              parseInt(balance.substring(1))});
-		          }
-	        }
-	     }
-    }
-
-    let res = [prosumer, consumer];
-    endDate = new Date();
-    console.log(res);
-    return res;
-};
-
-/*match consumer with prosumer
-  return a string array with the format "prosumeraddr:consumeraddr"*/
-async function matchHouseholds(households){
-  console.log(households);
-  let consumer = households[1];
-  let prosumer = households[0];
-
-  let res = [];
-  let contains = [];
-
-  for(let i = 0; i < consumer.length; i++){
-	   for(let j = 0; j < prosumer.length; j++){
-	      if(!contains.includes(prosumer[j]) && consumer[i].balance <= prosumer[j].balance){
-  		     contains.push(prosumer[j]);
-  		     let consumerId = consumer[i].id;
-  		     let prosumerId = prosumer[j].id;
-  		     res.push([prosumerId, consumerId]);
-  		     prosumer[j].balance -= consumer[i].balance;
-  		     break;
-	      }
-	   }
-     if(contains.length == prosumer.length){
-       contains = [];
-     }
-  }
-
-  console.log(res);
-  return res;
-};
-
 /*
   hashes every Payment received from each household
   get all payments of the last 8 minutes
@@ -271,6 +200,7 @@ async function hashPayments(){
       continue;
     }
     let paymentDate = new Date(payment.log_time);
+    paymentDate.setHours(paymentDate.getHours() + timezone);
     if((actDate - paymentDate)/60000 >= 8){
        break;
     }else{
@@ -371,7 +301,7 @@ cron.schedule('* * * * *', () => {
 
 /*
 	checks if an Raiden client is offline
-	if so then start the specific networks
+	if so then start the raiden client
 */
 async function checkRaidenClient(){
   try {
